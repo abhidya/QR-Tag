@@ -80,6 +80,7 @@ def get_players():
 def join(game_id):
     game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+
     game.add_player(player)
 
 
@@ -91,16 +92,25 @@ def leave(game_id):
     game.remove_player(player)
 
 
+@socketio.on('start', namespace='/game')
+def start_game(game_id):
+    game = Game(socketio, mongo, game_id)
+    player = Player(socketio, mongo, request.sid)
+
+    if game.host != player.id:
+        player.emit('error', 'Player is not host!')
+        return
+
+    game.start_game()
+
+
 @socketio.on('tag', namespace='/game')
 def on_tag(tagged_player_id):
     player = Player(socketio, mongo, request.sid)
     tagged_player = Player(socketio, mongo, tagged_player_id)
     game = Game(socketio, mongo, player.current_game)
 
-    tagged_player.emit('tagged', {
-        'by': request.sid,
-        'game': game.id
-    })
+    game.tag(player, tagged_player)
 
 
 @socketio.on('connect', namespace='/game')

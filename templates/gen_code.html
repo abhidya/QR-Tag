@@ -50,6 +50,7 @@
             $('form#join').submit(function(event) {
                 socket.emit('join', {room: $('#join_room').val()});
                 return false;
+            });
 
         });
     </script>

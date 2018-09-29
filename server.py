@@ -29,8 +29,17 @@ def background_thread():
 
 @app.route('/')
 def index():
-    return render_template('lobby.html', async_mode=socketio.async_mode)
+    return render_template('index.html', async_mode=socketio.async_mode)
 
+
+@app.route('/gen_code')
+def gen_code():
+    return render_template('gen_code.html', async_mode=socketio.async_mode)
+
+
+@app.route('/join_room')
+def join_room():
+    return render_template('lobby.html', async_mode=socketio.async_mode)
 
 @socketio.on('my_event', namespace='/test')
 def test_message(message):

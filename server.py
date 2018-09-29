@@ -162,6 +162,22 @@ def reset_game(game_id):
     game.reset_game()
 
 
+def tag_invuln_handler(tagged_player):
+    socketio.sleep(15)
+
+    game = Game(socketio, mongo, tagged_player.current_game)
+
+    if game.state != 'running':
+        return
+
+    if tagged_player.id not in game.players:
+        return
+
+    tagged_player.status = 'alive'
+    tagged_player.save()
+    game.emit('player_update', tagged_player.get_info())
+
+
 @socketio.on('tag', namespace='/game')
 def on_tag(tagged_index):
     tagged_index = int(tagged_index)
@@ -176,6 +192,7 @@ def on_tag(tagged_index):
         return
 
     game.tag(player, tagged_player)
+    socketio.start_background_task(tag_invuln_handler, tagged_player)
 
 
 @socketio.on('change_username', namespace='/game')

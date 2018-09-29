@@ -4,41 +4,6 @@
     <title>Generate Lobby Code</title>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
-    <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() {
-            namespace = '/game';
-
-            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-
-            socket.on('connect', function() {
-                console.log('Connected!');
-            });
-
-            socket.on('hello', function (our_sid) {
-                $('#our_sid').val(our_sid);
-            });
-
-            socket.on('tagged', function(msg) {
-                $('#log').append('<br>' + $('<div/>').text('Tagged by '+msg.by).html());
-            });
-
-            $('#join-game').click(function() {
-                  socket.emit('join', $('#start_room_name').val());
-
-                  return true;
-            })
-
-            $('#start-game').click(function () {
-                socket.emit('start', $('#start_room_name').val());
-                return false;
-            });
-
-            $('#tag-player').click(function () {
-                socket.emit('tag', $('#target_sid').val());
-                return false;
-            })
-        });
-    </script>
 </head>
 <body>
 <h1>Generate Lobby Code</h1>
@@ -62,8 +27,6 @@
 
 <script>
 
-
-
     $("#start_room_submit").click(function (e) {
         e.preventDefault();
         $.ajax({
@@ -71,7 +34,7 @@
             url: 'new_game',
             success: function (data) {
                 document.getElementById("start_room").start_room_submit.type = "hidden";
-                document.getElementById("GameCode").innerHTML = " Your Game Code!: " + data.game_id;
+                document.getElementById("GameCode").innerHTML = " Your Game Code! " + data.game;
                 document.getElementById("game_room_id").value = JSON.stringify(data);
                 document.getElementById("end_room").kill_room_submit.type = "submit";
 
@@ -89,6 +52,7 @@
             url: 'end_game',
             success: function (data) {
                 document.getElementById("start_room").start_room_submit.type = "submit";
+                document.getElementById("end_room").kill_room_submit.type = "hidden";
                 document.getElementById("GameCode").innerHTML = "";
             }
         });
@@ -97,6 +61,5 @@
 
 </script>
 
-<!--<div id="log"></div>-->
 </body>
 </html>

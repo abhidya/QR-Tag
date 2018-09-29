@@ -68,6 +68,7 @@ def end_game():
         game.remove_player(host)
 
     game.end_game()
+    print("Ended game ID: ", data['game'])
 
     return '', 204
 

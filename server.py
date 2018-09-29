@@ -38,7 +38,10 @@ def lobby():
 
 @app.route('/new_game', methods=['POST'])
 def new_game():
+    print("Creating new game...")
     game = Game(socketio, mongo)
+
+    print("Generated game ID: {}".format(game.id))
     game.save()
 
     return jsonify({'game_id': game.id}), 201

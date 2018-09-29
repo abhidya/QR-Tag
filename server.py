@@ -176,6 +176,7 @@ def tag_invuln_handler(tagged_player):
     tagged_player.status = 'alive'
     tagged_player.save()
     game.emit('player_update', tagged_player.get_info())
+    tagged_player.emit('revived')
 
 
 @socketio.on('tag', namespace='/game')

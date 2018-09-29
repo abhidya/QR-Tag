@@ -41,23 +41,62 @@
     </script>
 </head>
 <body>
-    <h1>Generate Lobby Code</h1>
-    <p>Async mode is: <b>{{ async_mode }}</b></p>
-    <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+<h1>Generate Lobby Code</h1>
 
-    <br>
+<br>
 
-    <form id="start_room">
-        <input type="text" name="start_room_name" id="start_room_name" placeholder="Room Name">
-        <input type="text" id="our_sid" placeholder="Our SID">
-        <input type="text" id="target_sid" placeholder="Target SID">
-        <button type="button" id="join-game">Join Game</button>
-        <button type="button" id="start-game">Start Game</button>
-        <button type="button" id="tag-player">Send Tag Event</button>
-    </form>
+<h1 id='GameCode'></h1>
+<br>
 
-    <!--</form>-->
-    <h2>Receive:</h2>
-    <div id="log"></div>
+
+<form id="start_room" >
+    <input type="submit" value="Set up Room Name" id="start_room_submit">
+</form>
+
+<form id="end_room" >
+    <input type="hidden" value="Kill Room" id="kill_room_submit">
+</form>
+
+    <input type="hidden" value="" id="game_room_id">
+
+
+<script>
+
+
+
+    $("#start_room_submit").click(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            url: 'new_game',
+            success: function (data) {
+                document.getElementById("start_room").start_room_submit.type = "hidden";
+                document.getElementById("GameCode").innerHTML = " Your Game Code!: " + data.game_id;
+                document.getElementById("game_room_id").value = JSON.stringify(data);
+                document.getElementById("end_room").kill_room_submit.type = "submit";
+
+            }
+        });
+    });
+
+        $("#kill_room_submit").click(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            data: document.getElementById("game_room_id").value,
+            url: 'end_game',
+            success: function (data) {
+                document.getElementById("start_room").start_room_submit.type = "submit";
+                document.getElementById("GameCode").innerHTML = "";
+            }
+        });
+    });
+
+
+</script>
+
+<!--<div id="log"></div>-->
 </body>
 </html>

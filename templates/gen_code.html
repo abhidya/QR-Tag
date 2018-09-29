@@ -5,7 +5,7 @@
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             namespace = '/test';
 
@@ -13,23 +13,23 @@
             var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
 
-            socket.on('connect', function() {
+            socket.on('connect', function () {
                 socket.emit('my_event', {data: 'I\'m connected!'});
             });
 
 
-            socket.on('my_response', function(msg) {
+            socket.on('my_response', function (msg) {
                 $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
             });
 
             var ping_pong_times = [];
             var start_time;
-            window.setInterval(function() {
+            window.setInterval(function () {
                 start_time = (new Date).getTime();
                 socket.emit('my_ping');
             }, 1000);
 
-            socket.on('my_pong', function() {
+            socket.on('my_pong', function () {
                 var latency = (new Date).getTime() - start_time;
                 ping_pong_times.push(latency);
                 ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
@@ -39,15 +39,15 @@
                 $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
             });
 
-            $('form#emit').submit(function(event) {
+            $('form#emit').submit(function (event) {
                 socket.emit('my_event', {data: $('#emit_data').val()});
                 return false;
             });
-            $('form#broadcast').submit(function(event) {
+            $('form#broadcast').submit(function (event) {
                 socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
                 return false;
             });
-            $('form#start_room').submit(function(event) {
+            $('form#start_room').submit(function (event) {
                 socket.emit('join', {room: $('#start_room_name').val()});
                 return false;
             });
@@ -55,29 +55,50 @@
     </script>
 </head>
 <body>
-    <h1>Generate Lobby Code</h1>
-    <p>Async mode is: <b>{{ async_mode }}</b></p>
-    <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+<h1>Generate Lobby Code</h1>
+<p>Async mode is: <b>{{ async_mode }}</b></p>
+<p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
 
-    <br>
+<br>
 
-    <form id="start_room" method="POST" action='#' onsubmit="SetupRoom();">
-        <input type="text" name="start_room_name" id="start_room_name" placeholder="Room Name">
-        <input type="submit" value="Set up Room Name" id="start_room_submit">
-    </form>
+<form id="start_room" method="POST" action='#' onsubmit="SetupRoom();">
+    <input type="text" name="start_room_name" id="start_room_name" placeholder="Room Name">
+    <input type="submit" value="Set up Room Name" id="start_room_submit">
+</form>
 
-        <script>
-        function SetupRoom(){
-      document.getElementById("start_room").start_room_name.type = "hidden"  ;
-      document.getElementById("start_room").start_room_submit.type = "hidden"  ;
+<form id="kill_room" onsubmit="KillRoom();">
+    <input type="hidden" name="kill_room_name" id="kill_room_name">
+    <input type="hidden"  id="kill_room_submit" value="Kill Room">
+</form>
 
-      return true;
+
+<script>
+    function SetupRoom() {
+        document.getElementById("start_room").start_room_name.type = "hidden";
+        document.getElementById("start_room").start_room_submit.type = "hidden";
+        document.getElementById("kill_room").kill_room_submit.type = "submit";
+        document.getElementById("kill_room").kill_room_submit.value = "Kill " + document.getElementById("start_room").start_room_name.value;
+
+        return true;
     }
 
-    </script>
+    function KillRoom() {
 
-    <!--</form>-->
-    <h2>Receive:</h2>
-    <div id="log"></div>
+        io.of('/').in(document.getElementById("start_room").start_room_name.value).clients(function (error, clients) {
+            if (clients.length > 0) {
+                console.log('clients in the room: \n');
+                console.log(clients);
+                clients.forEach(function (socket_id) {
+                    io.sockets.sockets[socket_id].leave('room name');
+                });
+            }
+        });
+    }
+
+</script>
+
+<!--</form>-->
+<h2>Receive:</h2>
+<div id="log"></div>
 </body>
 </html>

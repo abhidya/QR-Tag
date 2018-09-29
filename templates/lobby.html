@@ -20,8 +20,8 @@
 </div>
 <!--<div class="">-->
 <!--<input type="text" id="our-sid" placeholder="Our SID" readonly>-->
-<input type="text" id="target-sid" placeholder="Target SID">
-<button type="button" id="do-tag">Send Tag Event</button>
+<!--<input type="text" id="target-sid" placeholder="Target SID">-->
+<!--<button type="button" id="do-tag">Send Tag Event</button>-->
 <!--<button type="button" id="do-tag">Send Tag Event</button>-->
 <!--</div>-->
 <div class="">
@@ -37,6 +37,16 @@
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
         var players = {}
         var game_host = null;
+
+        function tempAlert(msg, duration) {
+            var el = document.createElement("div");
+            el.setAttribute("style", "position:absolute;top:40%;left:20%;background-color:white;");
+            el.innerHTML = msg;
+            setTimeout(function () {
+                el.parentNode.removeChild(el);
+            }, duration);
+            document.body.appendChild(el);
+        }
 
         function addToLog(msg) {
             $('.log').append('<br>' + $('<div/>').text(msg).html());
@@ -184,6 +194,7 @@
         scanner.addListener('scan', function (content) {
             console.log(content);
             socket.emit('tag', content);
+            tempAlert("You Tagged Player " + content, 1000);
         });
         Instascan.Camera.getCameras().then(function (cameras) {
             if (cameras.length > 0) {
@@ -198,6 +209,8 @@
         }).catch(function (e) {
             console.error(e);
         });
+
+
     });
 </script>
 <div id="log"></div>

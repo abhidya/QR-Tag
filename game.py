@@ -8,7 +8,7 @@ class Game:
         self.socketio = socketio
         self.db = mongo.db
 
-        if id is None:
+        if game_id is None:
             self.id = ''.join([str(randint(0, 9)) for i in range(6)])
         else:
             self.id = game_id

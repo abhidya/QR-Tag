@@ -64,21 +64,31 @@
     <h2>Send:</h2>
 
 
-    <form id="join" method="POST" action='#' onsubmit="DoSubmit();">
+    <form id="join" method="POST" action='#' onsubmit="JoinLogic();">
         <input type="text" name="join_room" id="join_room" placeholder="Room Name">
-        <input type="submit" value="Join Room">
+        <input type="submit" value="Join Room" id="join_room_button" >
     </form>
-    <form id="leave" method="POST" action='#'>
+    <form id="leave" method="POST" action='#' onsubmit="LeaveLogic();">
         <input type="hidden" name="leave_room" id="leave_room" placeholder="Room Name" >
         <input type="submit" value="Leave Room">
     </form>
 
 
     <script>
-        function DoSubmit(){
+        function JoinLogic(){
           document.getElementById("leave").leave_room.value = document.getElementById("join").join_room.value ;
+          document.getElementById("join").join_room.type = "hidden" ;
+          document.getElementById("join").join_room_button.type = "hidden" ;
           return true;
         }
+
+        function LeaveLogic(){
+      document.getElementById("join").join_room.value = "Room Name"  ;
+      document.getElementById("join").join_room.type = "input" ;
+      document.getElementById("join").join_room_button.type = "submit" ;
+      return true;
+    }
+
     </script>
 
     <h2>Receive:</h2>

@@ -76,12 +76,18 @@ class Game:
     def end_game(self):
         print("Game "+self.id+" ending!")
 
+        players = list(self.players)
+        for player_id in players:
+            player = Player(self.socketio, self.mongo, player_id)
+            player.on_leave_game(game)
+
         self.db.games.remove({'game_id': self.id})
         self.emit('game_end', self.id)
-        self.socketio.close_room(self.id)
+        self.socketio.close_room(self.id, namespace='/game')
 
     def add_player(self, player):
         if player.id in self.players:
+            player.emit('error', 'Already in game')
             return
 
         self.players.append(player.id)
@@ -103,6 +109,7 @@ class Game:
         print("Player "+player.id+' left game '+self.id)
 
         if player.id not in self.players:
+            player.emit('error', 'Not in game')
             return
 
         self.players.remove(player.id)
@@ -116,6 +123,23 @@ class Game:
 
     def tag(self, tagging_player, tagged_player):
         if self.state != 'running':
+            tagging_player.emit('error', 'Game is not running')
+            return
+
+        if tagging_player.id not in self.players:
+            tagging_player.emit('error', 'Tagging player not in this game')
+            return
+
+        if tagged_player.id not in self.players:
+            tagging_player.emit('error', 'Tagged player not in this game')
+            return
+
+        if tagging_player.status == 'dead':
+            tagging_player.emit('error', 'Tagging player is dead')
+            return
+
+        if tagged_player.status == 'dead':
+            tagging_player.emit('error', 'Tagged player is dead')
             return
 
         print("Player "+tagging_player.id+' tagged player '+tagged_player.id)

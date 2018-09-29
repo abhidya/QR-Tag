@@ -55,26 +55,6 @@ def new_game():
 
     return jsonify({'game': game.id}), 201
 
-@app.route('/end_game', methods=['POST'])
-def end_game():
-    data = request.get_json()
-
-    if data is None:
-        abort(400)
-
-    if not Game.exists(mongo, data['game']):
-        abort(404)
-
-    game = Game(socketio, mongo, data['game'])
-
-    if game.host is not None:
-        host = Player(socketio, mongo, game.host)
-        game.remove_player(host)
-
-    game.end_game()
-    print("Ended game ID: ", data['game'])
-
-    return '', 204
 
 @app.route('/games/<string:game_id>', methods=['GET'])
 def get_game_info(game_id):
@@ -129,10 +109,26 @@ def start_game(game_id):
     player = Player(socketio, mongo, request.sid)
 
     if game.host != player.id:
-        player.emit('error', 'Player is not host!')
+        player.emit('error', 'Player is not host')
         return
 
     game.start_game()
+
+
+@socketio.on('end', namespace='/game')
+def end_game(game_id):
+    game = Game(socketio, mongo, game_id)
+    player = Player(socketio, mongo, request.sid)
+
+    if game.host != player.id:
+        player.emit('error', 'Player is not host')
+        return
+
+    if game.host is not None:
+        host = Player(socketio, mongo, game.host)
+        game.remove_player(host)
+
+    game.end_game()
 
 
 @socketio.on('tag', namespace='/game')
@@ -181,6 +177,9 @@ def test_disconnect():
     if player.current_game is not None:
         game = Game(socketio, mongo, player.current_game)
         game.remove_player(player)
+
+        if game.host == request.sid:
+            game.end_game()
 
     player.delete()
 

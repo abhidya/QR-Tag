@@ -23,11 +23,16 @@
             <input type="text" id="target-sid" placeholder="Target SID">
             <button type="button" id="do-tag">Send Tag Event</button>
         </div>
+        <div class="">
+            <h3>Players</h3>
+            <div class="player-list"></div>
+        </div>
         <div class="log"></div>
         <script type="text/javascript">
             $(document).ready(function () {
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
                 var usernames = {};
+                var game_host = null;
 
                 function addToLog(msg) {
                     $('.log').append('<br>' + $('<div/>').text(msg).html());
@@ -42,6 +47,35 @@
                     addToLog("Player "+uid+" now has username "+username);
                 }
 
+                function clear_player_list() {
+                    $('.player-list').empty();
+                }
+
+                function update_player_list(id, username) {
+                    if (!username) {
+                        username = '<unknown username>';
+                    }
+
+                    let label = username.toString()+' ('+id+')';
+                    if (id == game_host) {
+                        label += ' (Host)'
+                    }
+
+                    $('.player-list').append('<br>' + $('<div/>').text(label).html());
+                }
+
+                function get_players(game_id) {
+                    fetch('/games/'+game_id).then(function (res) {
+                        return res.json();
+                    }).then(function (msg) {
+                        game_host = msg.host;
+                        clear_player_list();
+                        for (var i=0;i<msg.players.length;i++) {
+                            update_player_list(msg.players[i], usernames[msg.players[i]]);
+                        }
+                    })
+                }
+
                 socket.on('connect', function () {
                     addToLog('Connected to server!');
                     $('#our-sid').val(socket.id);
@@ -49,31 +83,44 @@
 
                 socket.on('joined', function (msg) {
                     addToLog('Player '+msg.id+' joined the game!');
+                    get_players($('#game-code').val());
                 });
 
                 socket.on('left', function (msg) {
                     addToLog('Player '+msg.id+' left the game!');
+                    get_players($('#game-code').val());
                 });
 
                 socket.on('game_start', function (msg) {
                     addToLog('Game '+msg.id+' started!');
 
+                    clear_player_list();
                     for (var i=0;i<msg.players.length;i++) {
-                        if (msg.players[i].id === socket.id) {
-                            continue;
-                        }
-
                         associate_username(msg.players[i].id, msg.players[i].username);
+                        update_player_list(msg.players[i].id, msg.players[i].username);
                     }
+                });
+
+                socket.on('game_end', function (id) {
+                    addToLog('Game '+id+' ending!');
+                    $('#game-code').val('');
+                    usernames = {};
+
+                    clear_player_list();
                 });
 
                 socket.on('username_changed', function (msg) {
                     associate_username(msg.id, msg.username);
-                })
+                    get_players($('#game-code').val());
+                });
 
                 socket.on('tagged', function (msg) {
                     addToLog(usernames[msg.by]+' ('+msg.by+') tagged '+usernames[msg.id]+' ('+msg.id+')!');
                 });
+
+                socket.on('error', function (msg) {
+                    addToLog('Error: '+msg);
+                })
 
                 $('#get-game').click(function () {
                     fetch('/new_game', {
@@ -82,23 +129,15 @@
                         return res.json();
                     }).then(function (body) {
                         $('#game-code').val(body['game']);
+                        socket.emit('join', body['game']);
                     });
 
                     return false;
                 });
 
                 $('#end-game').click(function () {
-                    fetch('/end_game', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            'game': $('#game-code').val()
-                        })
-                    }).then(function (res) {
-                        $('#game-code').val('');
-                    })
+                    socket.emit('end', $('#game-code').val());
+                    $('#game-code').val('');
 
                     return false;
                 });
@@ -113,6 +152,9 @@
 
                 $('#set-username').click(function () {
                     socket.emit('change_username', $('#username').val());
+                    if($('#game-code').val().length > 0) {
+                        get_players($('#game-code').val());
+                    }
                 })
 
                 $('#do-tag').click(function () {

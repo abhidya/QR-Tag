@@ -25,6 +25,10 @@ thread_lock = Lock()
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
 
+@app.route('/camera')
+def camera():
+    return render_template('camera.html', async_mode=socketio.async_mode)
+
 
 @app.route('/gen_code')
 def gen_code():

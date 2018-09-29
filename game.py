@@ -94,9 +94,9 @@ class Game:
     def tag(self, tagging_player, tagged_player):
         if self.state != State.RUNNING:
             return
-            
+
         tagged_player.emit('tagged', {
-            'by': tagging_player.username,
+            'by': tagging_player.id,
             'game': game.id
         })
 

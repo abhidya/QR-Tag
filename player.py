@@ -27,6 +27,12 @@ class Player:
             self.current_game = doc['game']
             self.role = doc['role']
 
+    @staticmethod
+    def exists(mongo, player_id):
+        doc = mongo.db.players.find_one({'player_id': player_id})
+
+        return doc is not None
+
     def save(self):
         self.db.players.find_one_and_replace(
             {'player_id': self.id},

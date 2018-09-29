@@ -1,0 +1,15 @@
+[Unit]
+Description=Serves the CQL8R app
+After=network.target
+
+[Service]
+User=stmobo
+Group=stmobo
+RuntimeDirectory=gunicorn
+WorkingDirectory=/home/stmobo/CQL8R
+ExecStart=/home/stmobo/.local/bin/pipenv run gunicorn -k eventlet server:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target

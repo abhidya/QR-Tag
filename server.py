@@ -18,13 +18,13 @@ thread_lock = Lock()
 
 def background_thread():
     """Example of how to send server generated events to clients."""
-    # count = 0
-    # while True:
-    #     socketio.sleep(10)
-    #     count += 1
-    #     # socketio.emit('my_response',
-    #     #               {'data': 'Server generated event', 'count': count},
-    #     #               namespace='/test')
+    count = 0
+    while True:
+        socketio.sleep(10)
+        count += 1
+        socketio.emit('my_response',
+                      {'data': 'Server generated event', 'count': count},
+                      namespace='/test')
 
 
 @app.route('/')
@@ -38,8 +38,9 @@ def gen_code():
 
 
 @app.route('/join_room')
-def join_room():
+def lobby():
     return render_template('lobby.html', async_mode=socketio.async_mode)
+
 
 @socketio.on('my_event', namespace='/test')
 def test_message(message):

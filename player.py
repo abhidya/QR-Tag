@@ -1,11 +1,5 @@
+import pymongo
 from enum import Enum
-
-class Status(Enum):
-    ALIVE = 1
-    DEAD = 2
-
-class Role(Enum):
-    PLAYER = 1
 
 class Player:
     def __init__(self, socketio, mongo, sid):
@@ -16,8 +10,8 @@ class Player:
         self.username = ''
         self.current_game = None
 
-        self.role = Role.PLAYER
-        self.status = Status.ALIVE
+        self.role = 'player'
+        self.status = 'alive'
 
         doc = self.db.players.find_one({'player_id': self.id})
 
@@ -64,5 +58,5 @@ class Player:
         pass
 
     def on_tagged(self, game, tagged_player):
-        self.status = Status.DEAD
+        self.status = 'dead'
         self.save()

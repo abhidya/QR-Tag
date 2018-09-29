@@ -5,10 +5,6 @@ from enum import Enum
 import pymongo
 
 
-class State(Enum):
-    PRESTART = 1
-    RUNNING = 2
-
 class Game:
     def __init__(self, socketio, mongo, game_id=None):
         self.socketio = socketio
@@ -21,7 +17,7 @@ class Game:
 
         self.players = []
         self.host = None
-        self.state = State.PRESTART
+        self.state = 'prestart'
 
         # attempt to load from database:
         doc = self.db.games.find_one({'game_id': self.id})
@@ -54,7 +50,7 @@ class Game:
         self.socketio.emit(event, data, room=self.id, **kwargs)
 
     def start_game(self):
-        self.state = State.RUNNING
+        self.state = 'running'
         self.save()
 
         self.emit('game_start', self.id)
@@ -92,12 +88,12 @@ class Game:
         self.emit('left', {'game': game.id, 'id': player.id, 'username': player.username})
 
     def tag(self, tagging_player, tagged_player):
-        if self.state != State.RUNNING:
+        if self.state != 'running':
             return
 
         tagged_player.emit('tagged', {
             'by': tagging_player.id,
-            'game': game.id
+            'game': self.id
         })
 
         tagging_player.on_tag(self, tagged_player)

@@ -77,15 +77,15 @@ def get_players():
 
 
 @socketio.on('join', namespace='/game')
-def join(message):
-    game = Game(socketio, mongo, message['game'])
+def join(game_id):
+    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
     game.add_player(player)
 
 
 @socketio.on('leave', namespace='/game')
-def leave(message):
-    game = Game(socketio, mongo, message['game'])
+def leave(game_id):
+    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
 
     game.remove_player(player)

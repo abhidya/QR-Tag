@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 flask = "*"
 flask-socketio = "*"
+pymongo = "*"
+gunicorn = "*"
 
 [dev-packages]
 

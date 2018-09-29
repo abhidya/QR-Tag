@@ -1,0 +1,7 @@
+Flask
+flask-socketio
+eventlet
+gunicorn
+flask-sqlalchemy
+psycopg2
+

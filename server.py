@@ -58,6 +58,7 @@ def end_game():
 
     game = Game(socketio, mongo, data['game'])
     game.end_game()
+    print("Ended game ID: ", data['game'])
 
     return '', 204
 

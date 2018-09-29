@@ -178,6 +178,9 @@ def test_disconnect():
         game = Game(socketio, mongo, player.current_game)
         game.remove_player(player)
 
+        if game.host == request.sid:
+            game.end_game()
+
     player.delete()
 
 if __name__ == '__main__':

@@ -153,7 +153,6 @@
                     document.getElementById("start_room").start_room_submit.type = "hidden";
                     document.getElementById("GameCode").innerHTML = " Your Game Code! " + data.game;
                     document.getElementById("game_room_id").value = JSON.stringify(data);
-                    // poll_player_list(data.game);
                     setInterval(poll_player_list.bind(null, data.game), 1000 );
 
                 }

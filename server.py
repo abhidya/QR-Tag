@@ -63,11 +63,6 @@ def end_game():
 
 @app.route('/games/<string:game_id>', methods=['GET'])
 def get_game_info(game_id):
-    data = request.get_json()
-
-    if data is None:
-        abort(400)
-
     if not Game.exists(mongo, game_id):
         abort(404)
 
@@ -89,7 +84,7 @@ def get_player_info(player_id):
     player = Player(socketio, mongo, player_id)
 
     return jsonify({
-        'id': player_id
+        'id': player_id,
         'username': player.username,
         'role': player.role,
         'status': player.status,

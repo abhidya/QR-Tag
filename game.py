@@ -52,6 +52,14 @@ class Game:
     def emit(self, event, data, **kwargs):
         self.socketio.emit(event, data, room=self.id, namespace='/game', **kwargs)
 
+    def get_player_by_index(self, index):
+        doc = self.db.players.find_one({'game': self.id, 'index': index})
+
+        if doc is None:
+            return None
+        else:
+            return Player(self.socketio, self.mongo, doc['player_id'])
+
     def start_game(self):
         self.state = 'running'
         self.save()
@@ -86,18 +94,24 @@ class Game:
             player.emit('error', 'Already in game')
             return
 
-        self.players.append(player.id)
+        current_index = 0
+        for player_id in self.players:
+            p = Player(self.socketio, self.mongo, player_id)
+            if p.index >= current_index:
+                current_index = p.index+1
 
-        if len(self.players) == 1:
+        if current_index == 0:
             self.host = player.id
 
+        self.players.append(player.id)
         self.save()
 
         join_room(self.id, sid=player.id, namespace='/game')
 
+        player.index = current_index
         player.on_join_game(self)
 
-        print("Player "+player.id+' joined game '+self.id)
+        print("Player "+player.id+' joined game '+self.id+' (index '+str(current_index)+')')
 
         self.emit('joined', {'game': self.id, 'player': player.get_info()})
 

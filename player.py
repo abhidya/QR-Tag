@@ -12,6 +12,7 @@ class Player:
 
         self.role = 'player'
         self.status = 'alive'
+        self.index = -1
 
         self.players_tagged = []
         self.players_tagged_by = []
@@ -25,6 +26,7 @@ class Player:
             self.role = doc['role']
             self.players_tagged = doc['players_tagged']
             self.players_tagged_by = doc['players_tagged_by']
+            self.index = doc['index']
 
     @staticmethod
     def exists(mongo, player_id):
@@ -43,6 +45,7 @@ class Player:
                 'role': self.role,
                 'players_tagged': self.players_tagged,
                 'players_tagged_by': self.players_tagged_by,
+                'index': self.index
             },
             upsert=True,
             return_document=pymongo.collection.ReturnDocument.AFTER
@@ -59,7 +62,8 @@ class Player:
             'username': self.username,
             'role': self.role,
             'tagged': self.players_tagged,
-            'tagged_by': self.players_tagged_by
+            'tagged_by': self.players_tagged_by,
+            'index': self.index
         }
 
     def emit(self, event, data, **kwargs):

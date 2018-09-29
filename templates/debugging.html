@@ -47,7 +47,7 @@
                         username = '<unknown username>';
                     }
 
-                    let label = player.username.toString()+' ('+player.id+')';
+                    let label = player.username.toString()+' [Index '+player.index+']'+' ('+player.id+')';
                     if (player.id == game_host) {
                         label += ' (Host)'
                     }
@@ -63,8 +63,19 @@
                 function refresh_player_list() {
                     clear_player_list();
 
-                    for (player_id of Object.keys(players)) {
-                        update_player_list(players[player_id]);
+                    var p_list = Object.values(players);
+                    p_list.sort(function (a, b) {
+                        if (a.index < b.index) {
+                            return -1;
+                        } else if (a.index > b.index) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                    for (player of p_list) {
+                        update_player_list(player);
                     }
                 }
 

@@ -147,15 +147,17 @@ def end_game(game_id):
 
 
 @socketio.on('tag', namespace='/game')
-def on_tag(tagged_player_id):
+def on_tag(tagged_index):
+    tagged_index = int(tagged_index)
+    
     player = Player(socketio, mongo, request.sid)
 
-    if not Player.exists(mongo, tagged_player_id):
+    game = Game(socketio, mongo, player.current_game)
+    tagged_player = game.get_player_by_index(tagged_index)
+
+    if tagged_player is None:
         player.emit('error', 'Player does not exist')
         return
-
-    tagged_player = Player(socketio, mongo, tagged_player_id)
-    game = Game(socketio, mongo, player.current_game)
 
     game.tag(player, tagged_player)
 

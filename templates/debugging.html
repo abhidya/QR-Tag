@@ -12,6 +12,7 @@
             <button type="button" id="get-game">New Game</button>
             <button type="button" id="join-game">Join Game</button>
             <button type="button" id="start-game">Start Game</button>
+            <button type="button" id="reset-game">Reset Game</button>
             <button type="button" id="end-game">End Game</button>
         </div>
         <div class="">
@@ -127,6 +128,13 @@
                     }
                 });
 
+                socket.on('game_reset', function (msg) {
+                    addToLog('Game '+msg.id+' reset!');
+                    for (var i=0;i<msg.players.length;i++) {
+                        update_player(msg.players[i]);
+                    }
+                });
+
                 socket.on('game_end', function (id) {
                     addToLog('Game '+id+' ending!');
 
@@ -167,6 +175,12 @@
                 $('#end-game').click(function () {
                     socket.emit('end', $('#game-code').val());
                     $('#game-code').val('');
+
+                    return false;
+                });
+
+                $('#reset-game').click(function () {
+                    socket.emit('reset', $('#game-code').val());
 
                     return false;
                 });

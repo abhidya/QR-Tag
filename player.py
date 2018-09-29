@@ -66,6 +66,12 @@ class Player:
             'index': self.index
         }
 
+    def reset_game_state(self):
+        self.status = 'alive'
+        self.players_tagged = []
+        self.players_tagged_by = []
+        self.save()
+
     def emit(self, event, data, **kwargs):
         self.socketio.emit(event, data, room=self.id, namespace='/game', **kwargs)
 

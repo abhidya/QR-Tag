@@ -146,10 +146,26 @@ def end_game(game_id):
     game.end_game()
 
 
+@socketio.on('reset', namespace='/game')
+def reset_game(game_id):
+    player = Player(socketio, mongo, request.sid)
+    if not Game.exists(mongo, game_id):
+        player.emit('error', 'Game does not exist')
+        return
+
+    game = Game(socketio, mongo, game_id)
+
+    if game.host != player.id:
+        player.emit('error', 'Player is not host')
+        return
+
+    game.reset_game()
+
+
 @socketio.on('tag', namespace='/game')
 def on_tag(tagged_index):
     tagged_index = int(tagged_index)
-    
+
     player = Player(socketio, mongo, request.sid)
 
     game = Game(socketio, mongo, player.current_game)

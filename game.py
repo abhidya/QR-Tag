@@ -77,6 +77,24 @@ class Game:
             'players': player_info
         })
 
+    def reset_game(self):
+        print("Resetting game "+self.id+"!")
+
+        players = list(self.players)
+        player_info = []
+        for player_id in players:
+            player = Player(self.socketio, self.mongo, player_id)
+            player.reset_game_state()
+            player_info.append(player.get_info())
+
+        self.state = 'prestart'
+        self.save()
+
+        self.emit('game_reset', {
+            'id': self.id,
+            'players': player_info
+        })
+
     def end_game(self):
         print("Game "+self.id+" ending!")
 

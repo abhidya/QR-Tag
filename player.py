@@ -1,7 +1,7 @@
 class Player:
     def __init__(self, socketio, mongo, sid):
         self.socketio = socketio
-        self.db = mongo
+        self.db = mongo.db
         self.id = sid
 
         self.status = ''
@@ -38,5 +38,5 @@ class Player:
 
     def on_leave_game(self, game):
         self.current_game = None
-        
+
         self.save()

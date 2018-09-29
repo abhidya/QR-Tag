@@ -6,7 +6,7 @@ import pymongo
 class Game:
     def __init__(self, socketio, mongo, game_id=None):
         self.socketio = socketio
-        self.db = mongo
+        self.db = mongo.db
 
         if id is None:
             self.id = ''.join([str(randint(0, 9)) for i in range(6)])
@@ -23,7 +23,7 @@ class Game:
 
     @staticmethod
     def exists(mongo, game_id):
-        doc = self.db.games.find_one({'game_id': game_id})
+        doc = mongo.db.games.find_one({'game_id': game_id})
 
         return (doc is not None)
 

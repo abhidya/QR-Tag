@@ -92,9 +92,9 @@ def leave(game_id):
 
 
 @socketio.on('tag', namespace='/game')
-def on_tag(message):
+def on_tag(tagged_player_id):
     player = Player(socketio, mongo, request.sid)
-    tagged_player = Player(socketio, mongo, message['tagged_player'])
+    tagged_player = Player(socketio, mongo, tagged_player_id)
     game = Game(socketio, mongo, player.current_game)
 
     tagged_player.emit('tagged', {

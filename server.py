@@ -44,7 +44,7 @@ def new_game():
     print("Generated game ID: {}".format(game.id))
     game.save()
 
-    return jsonify({'game_id': game.id}), 201
+    return jsonify({'game': game.id}), 201
 
 @app.route('/end_game', methods=['POST'])
 def end_game():
@@ -61,51 +61,94 @@ def end_game():
 
     return '', 204
 
-@app.route('/players', methods=['POST'])
-def get_players():
+@app.route('/games/<string:game_id>', methods=['GET'])
+def get_game_info(game_id):
     data = request.get_json()
 
     if data is None:
         abort(400)
 
-    if not Game.exists(mongo, data['game']):
+    if not Game.exists(mongo, game_id):
         abort(404)
 
-    game = Game(socketio, mongo, data['game'])
+    game = Game(socketio, mongo, game_id)
 
-    return jsonify(game['players'])
+    return jsonify({
+        'id': game_id,
+        'players': game.players,
+        'state': game.state,
+        'host': game.host
+    })
+
+
+@app.route('/players/<string:player_id>', methods=['GET'])
+def get_player_info(player_id):
+    if not Player.exists(mongo, player_id):
+        abort(404)
+
+    player = Player(socketio, mongo, player_id)
+
+    return jsonify({
+        'id': player_id
+        'username': player.username,
+        'role': player.role,
+        'status': player.status,
+        'game': player.current_game
+    })
 
 
 @socketio.on('join', namespace='/game')
-def join(message):
-    game = Game(socketio, mongo, message['game'])
+def join(game_id):
+    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+
     game.add_player(player)
 
 
 @socketio.on('leave', namespace='/game')
-def leave(message):
-    game = Game(socketio, mongo, message['game'])
+def leave(game_id):
+    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
 
     game.remove_player(player)
 
 
-@socketio.on('tag', namespace='/game')
-def on_tag(message):
+@socketio.on('start', namespace='/game')
+def start_game(game_id):
+    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
-    tagged_player = Player(socketio, mongo, message['tagged_player'])
+
+    if game.host != player.id:
+        player.emit('error', 'Player is not host!')
+        return
+
+    game.start_game()
+
+
+@socketio.on('tag', namespace='/game')
+def on_tag(tagged_player_id):
+    player = Player(socketio, mongo, request.sid)
+    tagged_player = Player(socketio, mongo, tagged_player_id)
     game = Game(socketio, mongo, player.current_game)
 
-    tagged_player.emit('tagged', {
-        'by': request.sid,
-        'game': game.id
-    })
+    game.tag(player, tagged_player)
+
+
+@socketio.on('change_username', namespace='/game')
+def change_username(new_username):
+    player = Player(socketio, mongo, request.sid)
+    player.username = new_username
+    player.save()
+
+    player.emit('username_changed', new_username)
 
 
 @socketio.on('connect', namespace='/game')
 def test_connect():
-    emit('my_response', {'data': 'Connected', 'count': 0})
+    player = Player(socketio, mongo, request.sid)
+    player.save()
+
+    player.emit('hello', request.sid)
 
 
 @socketio.on('disconnect', namespace='/game')

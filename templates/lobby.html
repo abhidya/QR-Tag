@@ -10,87 +10,200 @@
 <h1>Lobby</h1>
 
 <br>
-
-<h1 id='GameCode'></h1>
-
-
-<form id="join" method="POST" action='#'>
-    <input type="input" name="join_room" id="join_room_input" placeholder="Insert Your Game Code Here">
-    <input type="submit" value="Join Room" id="join_room_button">
-</form>
-
-<form id="leave" method="POST" action='#'>
-    <input type="hidden" name="leave_room" id="leave_room_input" placeholder="Room Name">
-    <input type="hidden" value="Leave Room" id="leave_room_button">
-</form>
-
-
-<script type="text/javascript" charset="utf-8">
+<div class="">
+    <input type="text" id="game-code" placeholder="Game Code">
+    <button type="button" id="join-game">Join Game</button>
+    <input type="text" id="username" placeholder="Username" style="display:none;">
+    <button type="button" id="set-username" style="display:none;">Set Username</button>
+    <button type="button" id="start-game" style="display:none;">Start Game</button>
+    <button type="button" id="end-game" style="display:none;">End Game</button>
+</div>
+<!--<div class="">-->
+<!--<input type="text" id="our-sid" placeholder="Our SID" readonly>-->
+<!--<input type="text" id="target-sid" placeholder="Target SID">-->
+<!--<button type="button" id="do-tag">Send Tag Event</button>-->
+<!--<button type="button" id="do-tag">Send Tag Event</button>-->
+<!--</div>-->
+<div class="">
+    <h3 id="players" style="display:none;">>Players</h3>
+    <div class="player-list"></div>
+</div>
+<div class="log" style="display:none;">></div>
+<script type="text/javascript">
     $(document).ready(function () {
-        namespace = '/game';
-        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
+        var players = {}
+        var game_host = null;
+
+        function addToLog(msg) {
+            $('.log').append('<br>' + $('<div/>').text(msg).html());
+        }
+
+        function clear_player_list() {
+            $('.player-list').empty();
+        }
+
+        function update_player_list(player) {
+            if (!player.username) {
+                username = '<unknown username>';
+            }
+
+            // let label = player.username.toString() + ' (' + player.id + ')';
+            let label = player.username.toString();
+            if (player.id == game_host) {
+                label += ' (Host)'
+            }
+
+            score = (player.tagged.length - player.tagged_by.length);
+
+            label += ' - Score: ' + score
+
+            $('.player-list').append('<br>' + $('<div/>').text(label).html());
+        }
+
+
+        function refresh_player_list() {
+            clear_player_list();
+
+            for (player_id of Object.keys(players)) {
+                update_player_list(players[player_id]);
+            }
+        }
+
+        function update_player(player) {
+            players[player.id] = player;
+
+            addToLog("Received update for " + player.username + " (" + player.id + ")");
+
+            refresh_player_list();
+        }
+
+        function get_players(game_id) {
+            fetch('/games/' + game_id).then(function (res) {
+                return res.json();
+            }).then(function (msg) {
+                game_host = msg.host;
+                for (var i = 0; i < msg.players.length; i++) {
+                    update_player(msg.players[i]);
+                }
+            })
+        }
 
         socket.on('connect', function () {
-            socket.emit('my_event', {data: 'I\'m connected!'});
+            addToLog('Connected to server!');
+            $('#our-sid').val(socket.id);
         });
 
+        socket.on('joined', function (msg) {
+            addToLog('Player ' + msg.player.id + ' joined the game!');
+            update_player(msg.player);
 
-        socket.on('my_response', function (msg) {
-            $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+            if (msg.player.id === socket.id) {
+                get_players($('#game-code').val());
+            }
         });
 
-        $('form#join').submit(function (event) {
-            socket.emit('join', {room: $('#join_room_input').val()},);
-            document.getElementById("leave").leave_room_button.type = "submit";
-            document.getElementById("GameCode").innerHTML = document.getElementById("join").join_room_input.value;
-            document.getElementById("join").join_room_button.type = "hidden";
-            document.getElementById("join").join_room_input.type = "hidden";
+        socket.on('left', function (msg) {
+            addToLog('Player ' + msg.id + ' left the game!');
+
+            delete players[msg.id];
+
+            get_players($('#game-code').val());
+        });
+
+        socket.on('game_start', function (msg) {
+            addToLog('Game ' + msg.id + ' started!');
+            for (var i = 0; i < msg.players.length; i++) {
+                update_player(msg.players[i]);
+            }
+        });
+
+        socket.on('game_end', function (id) {
+            addToLog('Game ' + id + ' ending!');
+
+            $('#game-code').val('');
+            players = {};
+
+            clear_player_list();
+        });
+
+        socket.on('player_update', function (msg) {
+            update_player(msg);
+        });
+
+        socket.on('tagged', function (msg) {
+            addToLog(msg.tagger.username + ' (' + msg.tagger.id + ') tagged ' + msg.tagged.username + ' (' + msg.tagged.id + ')!');
+
+            update_player(msg.tagger);
+            update_player(msg.tagged);
+        });
+
+        socket.on('error', function (msg) {
+            addToLog('Error: ' + msg);
+        })
+
+
+        $('#end-game').click(function () {
+            socket.emit('end', $('#game-code').val());
+            $('#game-code').val('');
+            location.reload();
+
             return false;
         });
 
-        $('form#leave').submit(function (event) {
-            socket.emit('join', {room: $('#leave_room_input').val()},);
-            document.getElementById("GameCode").innerHTML = "";
-            document.getElementById("join").join_room_button.type = "submit";
-            document.getElementById("join").join_room_input.type = "input";
-            document.getElementById("leave").leave_room_button.type = "hidden";
-            return false;
+        $('#join-game').click(function () {
+            socket.emit('join', $('#game-code').val());
+            document.getElementById("username").style.display = "block"
+            document.getElementById("set-username").style.display = "block"
+
+        });
+
+        $('#start-game').click(function () {
+            socket.emit('start', $('#game-code').val());
+            document.getElementById('end-game').style.display = "block"
+            document.getElementById('start-game').style.display = "none"
+            document.getElementById('scanner').style.display = "block"
+        });
+
+        $('#set-username').click(function () {
+            socket.emit('change_username', $('#username').val());
+            if ($('#game-code').val().length > 0) {
+                get_players($('#game-code').val());
+            }
+            document.getElementById('start-game').style.display = "block"
+        })
+
+        $('#do-tag').click(function () {
+            socket.emit('tag', $('#target-sid').val());
         });
     });
-
 </script>
 
-<script type="text/javascript" src="/static/js/llqrcode.js"></script>
-<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-<script type="text/javascript" src="/static/js/webqr.js"></script>
+<div id="scanner" style="display:none;">>
 
-<div id="scanner">
-
-<div id="mainbody">
-<table class="tsel" border="0" width="100%">
-<tr>
-<td valign="top" align="center" width="50%">
-<table class="tsel" border="0">
-<tr>
-<tr><td colspan="2" align="center">
-<div id="outdiv">
-</div></td></tr>
-</table>
-</td>
-</tr>
-<tr><td colspan="3" align="center">
-</td></tr>
-<tr><td colspan="3" align="center">
-<div id="result"></div>
-</td></tr>
-</table>
-<!-- webqr_2016 -->
-
-</div>&nbsp;
-
+    <script type="text/javascript" src="/static/js/instascan.min.js"></script>
+    </head>
+    <body>
+    <video id="preview"></video>
+    <script type="text/javascript">
+        let scanner = new Instascan.Scanner({video: document.getElementById('preview')});
+        scanner.addListener('scan', function (content) {
+            console.log(content);
+            alert(content);
+        });
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+    </script>
 </div>
-<canvas id="qr-canvas" width="800" height="600"></canvas>
-<script type="text/javascript">load();</script>
+
+
 <div id="log"></div>
 </body>
 </html>

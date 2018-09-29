@@ -88,24 +88,36 @@ def get_player_info(player_id):
 
 @socketio.on('join', namespace='/game')
 def join(game_id):
-    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+    if not Game.exists(mongo, game_id):
+        player.emit('error', 'Game does not exist')
+        return
+
+    game = Game(socketio, mongo, game_id)
 
     game.add_player(player)
 
 
 @socketio.on('leave', namespace='/game')
 def leave(game_id):
-    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+    if not Game.exists(mongo, game_id):
+        player.emit('error', 'Game does not exist')
+        return
+
+    game = Game(socketio, mongo, game_id)
 
     game.remove_player(player)
 
 
 @socketio.on('start', namespace='/game')
 def start_game(game_id):
-    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+    if not Game.exists(mongo, game_id):
+        player.emit('error', 'Game does not exist')
+        return
+
+    game = Game(socketio, mongo, game_id)
 
     if game.host != player.id:
         player.emit('error', 'Player is not host')
@@ -116,8 +128,12 @@ def start_game(game_id):
 
 @socketio.on('end', namespace='/game')
 def end_game(game_id):
-    game = Game(socketio, mongo, game_id)
     player = Player(socketio, mongo, request.sid)
+    if not Game.exists(mongo, game_id):
+        player.emit('error', 'Game does not exist')
+        return
+
+    game = Game(socketio, mongo, game_id)
 
     if game.host != player.id:
         player.emit('error', 'Player is not host')
@@ -133,6 +149,11 @@ def end_game(game_id):
 @socketio.on('tag', namespace='/game')
 def on_tag(tagged_player_id):
     player = Player(socketio, mongo, request.sid)
+
+    if not Player.exists(mongo, tagged_player_id):
+        player.emit('error', 'Player does not exist')
+        return
+
     tagged_player = Player(socketio, mongo, tagged_player_id)
     game = Game(socketio, mongo, player.current_game)
 

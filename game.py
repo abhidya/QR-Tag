@@ -4,10 +4,13 @@ from random import randint
 from enum import Enum
 import pymongo
 
+from player import Player
+
 
 class Game:
     def __init__(self, socketio, mongo, game_id=None):
         self.socketio = socketio
+        self.mongo = mongo
         self.db = mongo.db
 
         if game_id is None:
@@ -47,15 +50,32 @@ class Game:
         )
 
     def emit(self, event, data, **kwargs):
-        self.socketio.emit(event, data, room=self.id, **kwargs)
+        self.socketio.emit(event, data, room=self.id, namespace='/game', **kwargs)
 
     def start_game(self):
         self.state = 'running'
         self.save()
 
-        self.emit('game_start', self.id)
+        print("Game "+self.id+" started!")
+
+        player_info = []
+
+        for player_id in self.players:
+            player = Player(self.socketio, self.mongo, player_id)
+            player_info.append({
+                'id': player.id,
+                'username': player.username,
+                'role': player.role
+            })
+
+        self.emit('game_start', {
+            'id': self.id,
+            'players': player_info
+        })
 
     def end_game(self):
+        print("Game "+self.id+" ending!")
+
         self.db.games.remove({'game_id': self.id})
         self.emit('game_end', self.id)
         self.socketio.close_room(self.id)
@@ -71,27 +91,37 @@ class Game:
 
         self.save()
 
-        join_room(self.id, sid=player.id)
+        join_room(self.id, sid=player.id, namespace='/game')
 
         player.on_join_game(self)
+
+        print("Player "+player.id+' joined game '+self.id)
 
         self.emit('joined', {'game': self.id, 'id': player.id, 'username': player.username})
 
     def remove_player(self, player):
+        print("Player "+player.id+' left game '+self.id)
+
+        if player.id not in self.players:
+            return
+
         self.players.remove(player.id)
         self.save()
 
-        leave_room(self.id, sid=player.id)
+        leave_room(self.id, sid=player.id, namespace='/game')
 
         player.on_leave_game(self)
 
-        self.emit('left', {'game': game.id, 'id': player.id, 'username': player.username})
+        self.emit('left', {'game': self.id, 'id': player.id, 'username': player.username})
 
     def tag(self, tagging_player, tagged_player):
         if self.state != 'running':
             return
 
-        tagged_player.emit('tagged', {
+        print("Player "+tagging_player.id+' tagged player '+tagged_player.id)
+
+        self.emit('tagged', {
+            'id': tagged_player.id,
             'by': tagging_player.id,
             'game': self.id
         })

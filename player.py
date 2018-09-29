@@ -41,8 +41,11 @@ class Player:
             return_document=pymongo.collection.ReturnDocument.AFTER
         )
 
+    def delete(self):
+        self.db.players.remove({'player_id': self.id})
+
     def emit(self, event, data, **kwargs):
-        self.socketio.emit(event, data, room=self.id, **kwargs)
+        self.socketio.emit(event, data, room=self.id, namespace='/game', **kwargs)
 
     def on_join_game(self, game):
         self.current_game = game.id

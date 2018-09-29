@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Debugging</title>
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    </head>
+    <body>
+        <div class="">
+            <input type="text" id="game-code" placeholder="Game Code">
+            <button type="button" id="get-game">New Game</button>
+            <button type="button" id="join-game">Join Game</button>
+            <button type="button" id="start-game">Start Game</button>
+            <button type="button" id="end-game">End Game</button>
+        </div>
+        <div class="">
+            <input type="text" id="username" placeholder="Username">
+            <button type="button" id="set-username">Set Username</button>
+        </div>
+        <div class="">
+            <input type="text" id="our-sid" placeholder="Our SID" readonly>
+            <input type="text" id="target-sid" placeholder="Target SID">
+            <button type="button" id="do-tag">Send Tag Event</button>
+        </div>
+        <div class="log"></div>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
+                var usernames = {};
+
+                function addToLog(msg) {
+                    $('.log').append('<br>' + $('<div/>').text(msg).html());
+                }
+
+                function associate_username(uid, username) {
+                    if (usernames[uid] === username) {
+                        return;
+                    }
+
+                    usernames[uid] = username;
+                    addToLog("Player "+uid+" now has username "+username);
+                }
+
+                socket.on('connect', function () {
+                    addToLog('Connected to server!');
+                    $('#our-sid').val(socket.id);
+                });
+
+                socket.on('joined', function (msg) {
+                    addToLog('Player '+msg.id+' joined the game!');
+                });
+
+                socket.on('left', function (msg) {
+                    addToLog('Player '+msg.id+' left the game!');
+                });
+
+                socket.on('game_start', function (msg) {
+                    addToLog('Game '+msg.id+' started!');
+
+                    for (var i=0;i<msg.players.length;i++) {
+                        if (msg.players[i].id === socket.id) {
+                            continue;
+                        }
+
+                        associate_username(msg.players[i].id, msg.players[i].username);
+                    }
+                });
+
+                socket.on('username_changed', function (msg) {
+                    associate_username(msg.id, msg.username);
+                })
+
+                socket.on('tagged', function (msg) {
+                    addToLog(usernames[msg.by]+' ('+msg.by+') tagged '+usernames[msg.id]+' ('+msg.id+')!');
+                });
+
+                $('#get-game').click(function () {
+                    fetch('/new_game', {
+                        method: 'POST',
+                    }).then(function (res) {
+                        return res.json();
+                    }).then(function (body) {
+                        $('#game-code').val(body['game']);
+                    });
+
+                    return false;
+                });
+
+                $('#end-game').click(function () {
+                    fetch('/end_game', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            'game': $('#game-code').val()
+                        })
+                    }).then(function (res) {
+                        $('#game-code').val('');
+                    })
+
+                    return false;
+                });
+
+                $('#join-game').click(function () {
+                    socket.emit('join', $('#game-code').val());
+                });
+
+                $('#start-game').click(function () {
+                    socket.emit('start', $('#game-code').val());
+                });
+
+                $('#set-username').click(function () {
+                    socket.emit('change_username', $('#username').val());
+                })
+
+                $('#do-tag').click(function () {
+                    socket.emit('tag', $('#target-sid').val());
+                });
+            });
+        </script>
+    </body>
+</html>

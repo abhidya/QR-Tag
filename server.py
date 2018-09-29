@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from threading import Lock
-from flask import Flask, render_template, session, request, jsonify
+from flask import Flask, render_template, session, request, jsonify, abort
 from flask_pymongo import PyMongo
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
@@ -36,6 +36,11 @@ def lobby():
     return render_template('lobby.html', async_mode=socketio.async_mode)
 
 
+@app.route('/debugging')
+def debug_page():
+    return render_template('debugging.html', async_mode=socketio.async_mode)
+
+
 @app.route('/new_game', methods=['POST'])
 def new_game():
     print("Creating new game...")
@@ -57,6 +62,11 @@ def end_game():
         abort(404)
 
     game = Game(socketio, mongo, data['game'])
+
+    if game.host is not None:
+        host = Player(socketio, mongo, game.host)
+        game.remove_player(host)
+
     game.end_game()
 
     return '', 204
@@ -135,7 +145,19 @@ def change_username(new_username):
     player.username = new_username
     player.save()
 
-    player.emit('username_changed', new_username)
+    if player.current_game is not None:
+        game = Game(socketio, mongo, player.current_game)
+        game.emit('username_changed', {
+            'game': game.id,
+            'id': player.id,
+            'username': player.username
+        })
+    else:
+        player.emit('username_changed', {
+            'game': None,
+            'id': player.id,
+            'username': player.username
+        })
 
 
 @socketio.on('connect', namespace='/game')
@@ -150,6 +172,12 @@ def test_connect():
 def test_disconnect():
     print('Client disconnected', request.sid)
 
+    player = Player(socketio, mongo, request.sid)
+    if player.current_game is not None:
+        game = Game(socketio, mongo, player.current_game)
+        game.remove_player(player)
+
+    player.delete()
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

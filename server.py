@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 from threading import Lock
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, session, request, jsonify
+from flask_pymongo import PyMongo
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
+
+from game import Game
+from player import Player
 
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
@@ -11,21 +15,11 @@ async_mode = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/cql8r'
+mongo = PyMongo(app)
 socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
-
-
-def background_thread():
-    """Example of how to send server generated events to clients."""
-    count = 0
-    while True:
-        socketio.sleep(10)
-        count += 1
-        socketio.emit('my_response',
-                      {'data': 'Server generated event', 'count': count},
-                      namespace='/test')
-
 
 @app.route('/')
 def index():
@@ -42,79 +36,76 @@ def lobby():
     return render_template('lobby.html', async_mode=socketio.async_mode)
 
 
-@socketio.on('my_event', namespace='/test')
-def test_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']})
+@app.route('/new_game', methods=['POST'])
+def new_game():
+    game = Game(socketio, mongo)
+    game.save()
+
+    return jsonify({'game_id': game.id}), 201
+
+@app.route('/end_game', methods=['POST'])
+def end_game():
+    data = request.get_json()
+
+    if data is None:
+        abort(400)
+
+    if not Game.exists(mongo, data['game']):
+        abort(404)
+
+    game = Game(socketio, mongo, data['game'])
+    game.end_game()
+
+    return '', 204
+
+@app.route('/players', methods=['POST'])
+def get_players():
+    data = request.get_json()
+
+    if data is None:
+        abort(400)
+
+    if not Game.exists(mongo, data['game']):
+        abort(404)
+
+    game = Game(socketio, mongo, data['game'])
+
+    return jsonify(game['players'])
 
 
-@socketio.on('my_broadcast_event', namespace='/test')
-def test_broadcast_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']},
-         broadcast=True)
-
-
-@socketio.on('join', namespace='/test')
+@socketio.on('join', namespace='/game')
 def join(message):
-    join_room(message['room'])
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'In rooms: ' + ', '.join(rooms()),
-          'count': session['receive_count']})
+    game = Game(socketio, mongo, message['game'])
+    player = Player(socketio, mongo, request.sid)
+    game.add_player(player)
 
 
-@socketio.on('leave', namespace='/test')
+@socketio.on('leave', namespace='/game')
 def leave(message):
-    leave_room(message['room'])
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'In rooms: ' + ', '.join(rooms()),
-          'count': session['receive_count']})
+    game = Game(socketio, mongo, message['game'])
+    player = Player(socketio, mongo, request.sid)
+
+    game.remove_player(player)
 
 
-@socketio.on('close_room', namespace='/test')
-def close(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response', {'data': 'Room ' + message['room'] + ' is closing.',
-                         'count': session['receive_count']},
-         room=message['room'])
-    close_room(message['room'])
+@socketio.on('tag', namespace='/game')
+def on_tag(message):
+    player = Player(socketio, mongo, request.sid)
+    tagged_player = Player(socketio, mongo, message['tagged_player'])
+    game = Game(socketio, mongo, player.current_game)
+
+    tagged_player.emit('tagged', {
+        'by': request.sid,
+        'game': game.id
+    })
 
 
-@socketio.on('my_room_event', namespace='/test')
-def send_room_message(message):
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': session['receive_count']},
-         room=message['room'])
-
-
-@socketio.on('disconnect_request', namespace='/test')
-def disconnect_request():
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'Disconnected!', 'count': session['receive_count']})
-    disconnect()
-
-
-@socketio.on('my_ping', namespace='/test')
-def ping_pong():
-    emit('my_pong')
-
-
-@socketio.on('connect', namespace='/test')
+@socketio.on('connect', namespace='/game')
 def test_connect():
-    global thread
-    with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(target=background_thread)
     emit('my_response', {'data': 'Connected', 'count': 0})
 
 
-@socketio.on('disconnect', namespace='/test')
+@socketio.on('disconnect', namespace='/game')
 def test_disconnect():
     print('Client disconnected', request.sid)
 

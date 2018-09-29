@@ -4,7 +4,7 @@
     <title>Lobby</title>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
-
+    <script type="text/javascript" src="/static/js/instascan.min.js"></script>
 </head>
 <body>
 <h1>Lobby</h1>
@@ -29,6 +29,9 @@
     <div class="player-list"></div>
 </div>
 <div class="log" style="display:none;">></div>
+<div id="scanner" style="">
+    <video id="preview"></video>
+</div>
 <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
@@ -176,20 +179,11 @@
         $('#do-tag').click(function () {
             socket.emit('tag', $('#target-sid').val());
         });
-    });
-</script>
 
-<div id="scanner" style="display:none;">
-
-    <script type="text/javascript" src="/static/js/instascan.min.js"></script>
-    </head>
-    <body>
-    <video id="preview"></video>
-    <script type="text/javascript">
         let scanner = new Instascan.Scanner({video: document.getElementById('preview')});
         scanner.addListener('scan', function (content) {
             console.log(content);
-            alert(content);
+            socket.emit('tag', content);
         });
         Instascan.Camera.getCameras().then(function (cameras) {
             if (cameras.length > 0) {
@@ -200,10 +194,8 @@
         }).catch(function (e) {
             console.error(e);
         });
-    </script>
-</div>
-
-
+    });
+</script>
 <div id="log"></div>
 </body>
 </html>

@@ -13,6 +13,9 @@ class Player:
         self.role = 'player'
         self.status = 'alive'
 
+        self.players_tagged = []
+        self.players_tagged_by = []
+
         doc = self.db.players.find_one({'player_id': self.id})
 
         if doc is not None:
@@ -20,6 +23,8 @@ class Player:
             self.username = doc['username']
             self.current_game = doc['game']
             self.role = doc['role']
+            self.players_tagged = doc['players_tagged']
+            self.players_tagged_by = doc['players_tagged_by']
 
     @staticmethod
     def exists(mongo, player_id):
@@ -35,7 +40,9 @@ class Player:
                 'status': self.status,
                 'username': self.username,
                 'game': self.current_game,
-                'role': self.role
+                'role': self.role,
+                'players_tagged': self.players_tagged,
+                'players_tagged_by': self.players_tagged_by,
             },
             upsert=True,
             return_document=pymongo.collection.ReturnDocument.AFTER
@@ -43,6 +50,17 @@ class Player:
 
     def delete(self):
         self.db.players.remove({'player_id': self.id})
+
+    def get_info(self):
+        return {
+            'id': self.id,
+            'current_game': self.current_game,
+            'status': self.status,
+            'username': self.username,
+            'role': self.role,
+            'tagged': self.players_tagged,
+            'tagged_by': self.players_tagged_by
+        }
 
     def emit(self, event, data, **kwargs):
         self.socketio.emit(event, data, room=self.id, namespace='/game', **kwargs)
@@ -58,8 +76,10 @@ class Player:
         self.save()
 
     def on_tag(self, game, tagged_player):
-        pass
+        self.players_tagged.append(tagged_player.id)
+        self.save()
 
-    def on_tagged(self, game, tagged_player):
+    def on_tagged(self, game, tagging_player):
         self.status = 'dead'
+        self.players_tagged_by.append(tagging_player.id)
         self.save()

@@ -31,37 +31,49 @@
         <script type="text/javascript">
             $(document).ready(function () {
                 var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
-                var usernames = {};
+                var players = {}
                 var game_host = null;
 
                 function addToLog(msg) {
                     $('.log').append('<br>' + $('<div/>').text(msg).html());
                 }
 
-                function associate_username(uid, username) {
-                    if (usernames[uid] === username) {
-                        return;
-                    }
-
-                    usernames[uid] = username;
-                    addToLog("Player "+uid+" now has username "+username);
-                }
-
                 function clear_player_list() {
                     $('.player-list').empty();
                 }
 
-                function update_player_list(id, username) {
-                    if (!username) {
+                function update_player_list(player) {
+                    if (!player.username) {
                         username = '<unknown username>';
                     }
 
-                    let label = username.toString()+' ('+id+')';
-                    if (id == game_host) {
+                    let label = player.username.toString()+' ('+player.id+')';
+                    if (player.id == game_host) {
                         label += ' (Host)'
                     }
 
+                    score = (player.tagged.length - player.tagged_by.length);
+
+                    label += ' - Score: '+score
+
                     $('.player-list').append('<br>' + $('<div/>').text(label).html());
+                }
+
+
+                function refresh_player_list() {
+                    clear_player_list();
+
+                    for (player_id of Object.keys(players)) {
+                        update_player_list(players[player_id]);
+                    }
+                }
+
+                function update_player(player) {
+                    players[player.id] = player;
+
+                    addToLog("Received update for "+player.username+" ("+player.id+")");
+
+                    refresh_player_list();
                 }
 
                 function get_players(game_id) {
@@ -69,9 +81,8 @@
                         return res.json();
                     }).then(function (msg) {
                         game_host = msg.host;
-                        clear_player_list();
                         for (var i=0;i<msg.players.length;i++) {
-                            update_player_list(msg.players[i], usernames[msg.players[i]]);
+                            update_player(msg.players[i]);
                         }
                     })
                 }
@@ -82,40 +93,47 @@
                 });
 
                 socket.on('joined', function (msg) {
-                    addToLog('Player '+msg.id+' joined the game!');
-                    get_players($('#game-code').val());
+                    addToLog('Player '+msg.player.id+' joined the game!');
+                    update_player(msg.player);
+
+                    if (msg.player.id === socket.id) {
+                        get_players($('#game-code').val());
+                    }
                 });
 
                 socket.on('left', function (msg) {
                     addToLog('Player '+msg.id+' left the game!');
+
+                    delete players[msg.id];
+
                     get_players($('#game-code').val());
                 });
 
                 socket.on('game_start', function (msg) {
                     addToLog('Game '+msg.id+' started!');
-
-                    clear_player_list();
                     for (var i=0;i<msg.players.length;i++) {
-                        associate_username(msg.players[i].id, msg.players[i].username);
-                        update_player_list(msg.players[i].id, msg.players[i].username);
+                        update_player(msg.players[i]);
                     }
                 });
 
                 socket.on('game_end', function (id) {
                     addToLog('Game '+id+' ending!');
+
                     $('#game-code').val('');
-                    usernames = {};
+                    players = {};
 
                     clear_player_list();
                 });
 
-                socket.on('username_changed', function (msg) {
-                    associate_username(msg.id, msg.username);
-                    get_players($('#game-code').val());
+                socket.on('player_update', function (msg) {
+                    update_player(msg);
                 });
 
                 socket.on('tagged', function (msg) {
-                    addToLog(usernames[msg.by]+' ('+msg.by+') tagged '+usernames[msg.id]+' ('+msg.id+')!');
+                    addToLog(msg.tagger.username+' ('+msg.tagger.id+') tagged '+msg.tagged.username+' ('+msg.tagged.id+')!');
+
+                    update_player(msg.tagger);
+                    update_player(msg.tagged);
                 });
 
                 socket.on('error', function (msg) {

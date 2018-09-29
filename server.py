@@ -58,10 +58,15 @@ def get_game_info(game_id):
         abort(404)
 
     game = Game(socketio, mongo, game_id)
+    player_info = []
+
+    for player_id in game.players:
+        player = Player(socketio, mongo, player_id)
+        player_info.append(player.get_info())
 
     return jsonify({
         'id': game_id,
-        'players': game.players,
+        'players': player_info,
         'state': game.state,
         'host': game.host
     })
@@ -74,13 +79,7 @@ def get_player_info(player_id):
 
     player = Player(socketio, mongo, player_id)
 
-    return jsonify({
-        'id': player_id,
-        'username': player.username,
-        'role': player.role,
-        'status': player.status,
-        'game': player.current_game
-    })
+    return jsonify(player.get_info())
 
 
 @socketio.on('join', namespace='/game')
@@ -144,17 +143,9 @@ def change_username(new_username):
 
     if player.current_game is not None:
         game = Game(socketio, mongo, player.current_game)
-        game.emit('username_changed', {
-            'game': game.id,
-            'id': player.id,
-            'username': player.username
-        })
+        game.emit('player_update', player.get_info())
     else:
-        player.emit('username_changed', {
-            'game': None,
-            'id': player.id,
-            'username': player.username
-        })
+        player.emit('player_update', player.get_info())
 
 
 @socketio.on('connect', namespace='/game')

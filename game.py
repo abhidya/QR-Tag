@@ -62,11 +62,7 @@ class Game:
 
         for player_id in self.players:
             player = Player(self.socketio, self.mongo, player_id)
-            player_info.append({
-                'id': player.id,
-                'username': player.username,
-                'role': player.role
-            })
+            player_info.append(player.get_info())
 
         self.emit('game_start', {
             'id': self.id,
@@ -103,7 +99,7 @@ class Game:
 
         print("Player "+player.id+' joined game '+self.id)
 
-        self.emit('joined', {'game': self.id, 'id': player.id, 'username': player.username})
+        self.emit('joined', {'game': self.id, 'player': player.get_info()})
 
     def remove_player(self, player):
         print("Player "+player.id+' left game '+self.id)
@@ -119,7 +115,7 @@ class Game:
 
         player.on_leave_game(self)
 
-        self.emit('left', {'game': self.id, 'id': player.id, 'username': player.username})
+        self.emit('left', {'game': self.id, 'id': player.id})
 
     def tag(self, tagging_player, tagged_player):
         if self.state != 'running':
@@ -144,11 +140,11 @@ class Game:
 
         print("Player "+tagging_player.id+' tagged player '+tagged_player.id)
 
-        self.emit('tagged', {
-            'id': tagged_player.id,
-            'by': tagging_player.id,
-            'game': self.id
-        })
-
         tagging_player.on_tag(self, tagged_player)
         tagged_player.on_tagged(self, tagging_player)
+
+        self.emit('tagged', {
+            'tagged': tagged_player.get_info(),
+            'tagger': tagging_player.get_info(),
+            'game': self.id
+        })

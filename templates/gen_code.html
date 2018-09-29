@@ -47,11 +47,10 @@
                 socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
                 return false;
             });
-            $('form#join').submit(function(event) {
-                socket.emit('join', {room: $('#join_room').val()});
+            $('form#start_room').submit(function(event) {
+                socket.emit('start_room', {room: $('#start_room_name').val()});
                 return false;
             });
-
         });
     </script>
 </head>
@@ -59,13 +58,23 @@
     <h1>Generate Lobby Code</h1>
     <p>Async mode is: <b>{{ async_mode }}</b></p>
     <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
-    <h2>Send:</h2>
 
+    <br>
 
-    <form id="join" method="POST" action='#'>
-        <input type="text" name="join_room" id="join_room" placeholder="Room Name">
-        <input type="submit" value="Join Room">
+    <form id="start_room" method="POST" action='#' onsubmit="SetupRoom();">
+        <input type="text" name="start_room_name" id="start_room_name" placeholder="Room Name">
+        <input type="submit" value="Set up Room Name" id="start_room_submit">
     </form>
+
+        <script>
+        function SetupRoom(){
+      document.getElementById("start_room").start_room_name.type = "hidden"  ;
+      document.getElementById("start_room").start_room_submit.type = "hidden"  ;
+
+      return true;
+    }
+
+    </script>
 
     <!--</form>-->
     <h2>Receive:</h2>

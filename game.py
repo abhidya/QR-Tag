@@ -5,11 +5,11 @@ from enum import Enum
 import pymongo
 
 
-class Game:
-    class State(Enum):
-        PRESTART = 1
-        RUNNING = 2
+class State(Enum):
+    PRESTART = 1
+    RUNNING = 2
 
+class Game:
     def __init__(self, socketio, mongo, game_id=None):
         self.socketio = socketio
         self.db = mongo.db

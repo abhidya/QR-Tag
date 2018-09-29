@@ -1,13 +1,13 @@
 from enum import Enum
 
+class Status(Enum):
+    ALIVE = 1
+    DEAD = 2
+
+class Role(Enum):
+    PLAYER = 1
+
 class Player:
-    class Status(Enum):
-        ALIVE = 1
-        DEAD = 2
-
-    class Role(Enum):
-        PLAYER = 1
-
     def __init__(self, socketio, mongo, sid):
         self.socketio = socketio
         self.db = mongo.db

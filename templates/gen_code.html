@@ -48,7 +48,7 @@
                 return false;
             });
             $('form#start_room').submit(function(event) {
-                socket.emit('start_room', {room: $('#start_room_name').val()});
+                socket.emit('join', {room: $('#start_room_name').val()});
                 return false;
             });
         });

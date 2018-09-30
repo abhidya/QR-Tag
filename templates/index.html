@@ -1,32 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-img {
-    width: 35%;
-    height: auto;}
+    <style>
+        .logo {
+            text-align: center;
+        }
 
-</style>
-<body background="/static/images/outerspace.jpg">
-<center>
-  <img src="/static/images/title.png">
+        .logo img {
+        }
+
+        .zap {
+            text-align: center;
+        }
+
+        .zap img {
+            /*width: 85%;*/
+            width: 60%;
+        }
+
+        .links {
+            text-align: center;
+
+        }
+
+        .brightness {
+            display: inline-block;
+
+        }
+
+        .brightness img:hover {
+            opacity: .70;
+        }
+
+        .links img {
+            width: 75%;
+        }
+
+        .logo-container {
+            padding-top: 4.25rem;
+            padding-bottom: 1.5rem
+        }
+
+        .vertical-positioning-wrapper .logo-container {
+            padding-top: 0
+        }
+
+        .logo-container .logo {
+            width: 60%;
+
+        }
+
+        .logo-container .logo--dahl {
+            position: relative;
+            right: .75rem;
+            height: 7.125rem;
+        ]
+        }
+
+
+    </style>
+    <title>QR Tag</title>
 
 </head>
 
+<body background="/static/images/outerspace.jpg">
 
-<br>
+<div class="logo-container">
+    <div class="logo">
 
- <img src="/static/images/zap.png">
+        <audio autoplay loop>
+            <source src="/static/music/lobby.mp3">
+        </audio>
+        <img src="/static/images/title.png">
 
-<br><br><br>
+    </div>
+    <div class="zap">
+
+        <img src="/static/images/zap.png">
+    </div>
+    <br><br><br>
 
     <meta charset="UTF-8">
-    <title>Title</title>
 
+    <div class="links">
+        <div class="brightness">
+            <a href="/gen_code"><img border="0" alt=“Generate Room” src="/static/images/generate.png"></a>
+        </div>
 
-     <a href="/gen_code"><img border="0" alt=“Generate Room” src="/static/images/generate.png"></a>
-     <br>
-     <a href="/gameplay"><img border="0" alt=“Join Room“ src="/static/images/join.png"></a>
-</center>
+        <br>
+        <br>
+
+        <div class="brightness">
+            <a href="/gameplay"><img border="0" alt=“Join Room“ src="/static/images/join.png"></a>
+        </div>
+    </div>
+    <!--<a href="/store"><img border="0" alt=“Store“ src="/static/images/store.png" height="75" width="150"></a>-->
+
+</div>
+
 </body>
 </html>

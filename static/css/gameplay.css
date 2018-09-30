@@ -13,11 +13,11 @@
     transform: translate(-50%, -50%);
 }
 
-.pregame-form input {
-    padding: 2px;
-    border-width: 1px;
-    border-style: solid;
-}
+/*.pregame-form input {*/
+    /*padding: 2px;*/
+    /*border-width: 1px;*/
+    /*border-style: solid;*/
+/*}*/
 
 .game-screen-wrapper {
     text-align: center;
@@ -53,8 +53,9 @@
 
 .event-feed {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .background-normal {
@@ -65,4 +66,79 @@
 
 .background-highlight {
     background-color: yellow;
+}
+
+body {
+    background-color: aquamarine;
+    -webkit-transition: all 1s ease-in-out;
+    -moz-transition: all 1s ease-in-out;
+    -o-transition: all 1s ease-in-out;
+    -ms-transition: all 1s ease-in-out;
+    transition: all 1s ease-in-out;
+}
+
+
+button {
+  margin: auto;
+  padding: 1rem;
+  text-transform: uppercase;
+  color: #111;
+  background-color: $green;
+  border: none;
+  border-radius: 3px;
+  box-shadow: 1px 1px 10px rgba(50,50,50,.4);
+  transition: .3s all ease;
+  letter-spacing: .1rem;
+  font-size: .85rem;
+  position: relative;
+  top: 0;
+  right: 0;
+  /*padding-left: 2.5rem;*/
+
+  &:after,
+  &:before {
+    position: absolute;
+    font-family: 'Barrio', sans-serif;
+    font-weight: bold;
+    font-size: 1rem;
+    color: darken($green, 20%);
+    transition: .3s all ease;
+  }
+
+  &:before {
+    content: '_';
+    position: absolute;
+    left: 1.4rem;
+    top: .9rem;
+  }
+
+  &:after {
+    content: '>';
+    position: absolute;
+    left: .8rem;
+    top: 1rem;
+  }
+
+  &:hover {
+    box-shadow: 1px 1px 20px rgba(150,150,150,.2);
+    top: -.1rem;
+    right: -.1rem;
+    cursor: pointer;
+
+
+    &:before {
+      content: '_';
+      position: absolute;
+      left: .8rem;
+      top: .7rem;
+      transform: translateY(-1px);
+    }
+
+    &:after {
+      content: '>';
+      position: absolute;
+      left: 1.1rem;
+      top: 1rem;
+    }
+  }
 }

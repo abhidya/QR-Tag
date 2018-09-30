@@ -1,53 +1,92 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Gameplay</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-        <link rel="stylesheet" href="/static/css/gameplay.css">
-    </head>
-    <body>
-        <div class="pregame-form-wrapper">
-            <form class="pregame-form username-form">
-                <div class="form-group">
-                    <input type="text" id="username-prompt" placeholder="Player Name">
-                </div>
-                <div class="form-group">
-                    <button type="button" id="submit-username">Submit</button>
-                </div>
-            </form>
-            <form class="pregame-form game-form" style="display:none">
-                <div class="form-group">
-                    <input type="number" id="code-prompt" placeholder="Game Code">
-                </div>
-                <div class="form-group">
-                    <button type="button" id="submit-code">Enter Game</button>
-                    <button type="button" id="game-back-button">Back</button>
-                </div>
-            </form>
+<head>
+
+    <meta charset="utf-8">
+    <title>Gameplay</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/gameplay.css">
+</head>
+<body background=red>
+
+<audio autoplay loop>
+    <source src="/static/music/lobby.mp3">
+</audio>
+
+
+<div class="pregame-form-wrapper">
+    <form class="pregame-form username-form">
+        <div class="form-group">
+            <input type="text" id="username-prompt" placeholder="Your Name">
         </div>
-        <div class="game-screen-wrapper" style="display:none">
-            <div class="game-screen">
-                <video id="camera-preview"></video>
-                <div class="info-container">
-                    <div class="info-box event-feed-container event-feed-normal">
-                        <div class="event-feed"></div>
-                    </div>
-                    <div class="info-box score-feed-container">
-                        <div class="score-feed">
-                            Score: 0
-                        </div>
-                        <div class="time-feed">
-                            Time: 00:00
-                        </div>
-                    </div>
+        <div class="form-group">
+            <button type="button" id="submit-username" class="button2">Enter</button>
+        </div>
+    </form>
+    <form class="pregame-form game-form" style="display:none">
+        <div class="form-group">
+            <input type="number" id="code-prompt" placeholder="Game Code">
+        </div>
+        <div class="form-group">
+            <button type="button" id="submit-code">Enter Game</button>
+            <button type="button" id="game-back-button">Back</button>
+        </div>
+    </form>
+</div>
+<div class="game-screen-wrapper" style="display:none">
+    <div class="game-screen">
+        <video id="camera-preview"></video>
+        <div class="info-container">
+            <div class="info-box event-feed-container event-feed-normal">
+                <div class="event-feed"></div>
+            </div>
+            <div class="info-box score-feed-container">
+                <div class="score-feed">
+                    Score: 0
+                </div>
+                <div class="time-feed">
+                    Time: 00:00
                 </div>
             </div>
         </div>
-        <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6,fetch"></script>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.4.2.min.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
-        <script type="text/javascript" src="/static/js/instascan.min.js"></script>
-        <script type="text/javascript" src="/static/js/gameplay.js" charset="utf-8"></script>
-    </body>
+    </div>
+</div>
+<script type="text/javascript">
+    function shuffle(array) {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array[0];
+
+
+    }
+
+    var colors = [' #2ECC40  ', ' #0074D9 ', ' #7FDBFF ', ' #39CCCC ', ' # #2ECC40', '#01FF70', ' #FFDC00 ', ' #FF851B', '#FF4136', '#DDDDDD', '#F012BE', '#B10DC9'];
+
+    function background_change(colors) {
+        document.body.style.backgroundColor = shuffle(colors);
+
+    }
+
+    setInterval(background_change.bind(null, colors), 1900);
+</script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6,fetch"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+<script type="text/javascript" src="/static/js/instascan.min.js"></script>
+<script type="text/javascript" src="/static/js/gameplay.js" charset="utf-8"></script>
+</body>
 </html>

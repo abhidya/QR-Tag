@@ -106,6 +106,8 @@ function activateCamera() {
     Instascan.Camera.getCameras().then(function (cameras) {
         console.log(cameras.length);
         if (cameras.length > 0) {
+            scanner.start(cameras[0]);
+            /*
             var started_camera = false;
 
             for (var i=cameras.length-1;i>=0;i--) {
@@ -120,9 +122,11 @@ function activateCamera() {
                 }
             }
 
+
             if (!started_camera) {
                 console.error("Could not start any cameras.");
             }
+            */
         } else {
             console.error('No cameras found.');
         }

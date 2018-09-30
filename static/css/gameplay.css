@@ -53,6 +53,16 @@
 
 .event-feed {
     position: absolute;
-     top: 50%; left: 50%;
-     transform: translate(-50%,-50%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+.background-normal {
+    background-color: inherit;
+    transition-property: background-color;
+    transition-duration: 2s;
+}
+
+.background-highlight {
+    background-color: yellow;
 }

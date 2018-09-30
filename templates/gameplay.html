@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="/static/css/gameplay.css">
     </head>
     <body>
-        <div class="pregame-form-wrapper" style="display:none">
+        <div class="pregame-form-wrapper">
             <form class="pregame-form username-form">
                 <div class="form-group">
                     <input type="text" id="username-prompt" placeholder="Player Name">
@@ -26,21 +26,19 @@
                 </div>
             </form>
         </div>
-        <div class="game-screen-wrapper">
+        <div class="game-screen-wrapper" style="display:none">
             <div class="game-screen">
                 <video id="camera-preview"></video>
                 <div class="info-container">
-                    <div class="info-box">
-                        <div class="event-feed">
-                            Content 1
-                        </div>
+                    <div class="info-box event-feed-container event-feed-normal">
+                        <div class="event-feed"></div>
                     </div>
-                    <div class="info-box">
+                    <div class="info-box score-feed-container">
                         <div class="score-feed">
-                            Score: N
+                            Score: 0
                         </div>
                         <div class="time-feed">
-                            Time: 01:00
+                            Time: 00:00
                         </div>
                     </div>
                 </div>

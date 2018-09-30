@@ -101,7 +101,7 @@ class Game:
         players = list(self.players)
         for player_id in players:
             player = Player(self.socketio, self.mongo, player_id)
-            player.on_leave_game(game)
+            player.on_leave_game(self)
 
         self.db.games.remove({'game_id': self.id})
         self.emit('game_end', self.id)

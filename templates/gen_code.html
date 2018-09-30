@@ -1,168 +1,27 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head>
-    <title>Generate Lobby Code</title>
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
-</head>
-<body>
-<h1>Make your Game Code</h1>
-
-<br>
-
-<h1 id='GameCode'></h1>
-<br>
-
-
-<form id="start_room">
-    <input type="submit" value="Set up Room Name" id="start_room_submit">
-</form>
-
-
-<input type="hidden" value="" id="game_room_id">
-<div class="">
-    <h3 id="players" style="display:block;">Players</h3>
-    <div class="player-list"></div>
-</div>
-
-<div class="log" style="display:none;"></div>
-<script type="text/javascript">
-    $(document).ready(function () {
-        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/game');
-        var players = {}
-        var game_host = null;
-
-        function addToLog(msg) {
-            $('.log').append('<br>' + $('<div/>').text(msg).html());
-        }
-
-        function clear_player_list() {
-            $('.player-list').empty();
-        }
-
-        function update_player_list(player) {
-            if (!player.username) {
-                username = '<unknown username>';
-            }
-
-            // let label = player.username.toString() + ' (' + player.id + ')';
-            let label = player.username.toString();
-            if (player.id == game_host) {
-                label += ' (Host)'
-            }
-
-            score = (player.tagged.length - player.tagged_by.length);
-
-            label += ' - Score: ' + score
-
-            $('.player-list').append('<br>' + $('<div/>').text(label).html());
-        }
-
-
-
-
-        function refresh_player_list() {
-            clear_player_list();
-
-            for (player_id of Object.keys(players)) {
-                update_player_list(players[player_id]);
-            }
-        }
-
-        function update_player(player) {
-            players[player.id] = player;
-
-            // addToLog("Received update for " + player.username + " (" + player.id + ")");
-            if (player.username  != null && player.username.trim() !== '')
-                addToLog(player.username + " Has Joined the Game");
-
-            refresh_player_list();
-        }
-
-        function get_players(game_id) {
-            fetch('/games/' + game_id).then(function (res) {
-                return res.json();
-            }).then(function (msg) {
-                game_host = msg.host;
-                for (var i = 0; i < msg.players.length; i++) {
-                    update_player(msg.players[i]);
-                }
-            })
-        }
-
-        socket.on('connect', function () {
-            // addToLog('Connected to server!');
-            $('#our-sid').val(socket.id);
-        });
-
-        socket.on('joined', function (msg) {
-            // addToLog('Player ' + msg.player.id + ' joined the game!');
-            update_player(msg.player);
-
-            if (msg.player.id === socket.id) {
-                get_players($('#game-code').val());
-            }
-        });
-
-        socket.on('left', function (msg) {
-            addToLog('Player ' + msg.id + ' left the game!');
-
-            delete players[msg.id];
-
-            get_players($('#game-code').val());
-        });
-
-        socket.on('game_start', function (msg) {
-            addToLog('Game ' + msg.id + ' started!');
-            for (var i = 0; i < msg.players.length; i++) {
-                update_player(msg.players[i]);
-            }
-        });
-
-        socket.on('game_end', function (id) {
-            addToLog('Game ' + id + ' ending!');
-
-            $('#game-code').val('');
-            players = {};
-
-            clear_player_list();
-        });
-
-        socket.on('player_update', function (msg) {
-            update_player(msg);
-        });
-
-        socket.on('error', function (msg) {
-            addToLog('Error: ' + msg);
-        })
-
-        function poll_player_list(game_id){
-            clear_player_list();
-            get_players(game_id);
-        }
-
-        $('#do-tag').click(function () {
-            socket.emit('tag', $('#target-sid').val());
-        });
-        $("#start_room_submit").click(function (e) {
-            e.preventDefault();
-            $.ajax({
-                type: 'POST',
-                url: 'new_game',
-                success: function (data) {
-                    document.getElementById("start_room").start_room_submit.type = "hidden";
-                    document.getElementById("GameCode").innerHTML = " Your Game Code! " + data.game;
-                    document.getElementById("game_room_id").value = JSON.stringify(data);
-                    setInterval(poll_player_list.bind(null, data.game), 1000 );
-
-                }
-
-            });
-        });
-
-    });
-</script>
-
-
-</body>
+    <head>
+        <meta charset="utf-8">
+        <title>Generate Game Code</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="/static/css/gen_code.css">
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="game-code-display">Generate Game Code</h1>
+            <h2 class="game-time-display"></h2>
+            <div class="main-button-row">
+                <button type="button" id="create-game" disabled>Create Game</button>
+                <button type="button" id="start-game" disabled>Start Game</button>
+                <button type="button" id="reset-game" disabled>Restart Game</button>
+                <button type="button" id="end-game" disabled>End Game</button>
+            </div>
+            <h3 class='player-header'>Players</h2>
+            <ol class="player-list"></ol>
+        </div>
+        <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6,fetch"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+        <script type="text/javascript" src="/static/js/gen_room.js" charset="utf-8"></script>
+    </body>
 </html>

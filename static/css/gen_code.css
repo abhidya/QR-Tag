@@ -1,0 +1,22 @@
+body {
+    margin: 5%;
+    text-align: center;
+}
+
+.container {
+    display: inline-block;
+    text-align: center;
+
+    width: 50%;
+}
+
+.container div, h1, h2, h3 {
+    margin-top: 2%;
+    text-align: center;
+}
+
+.player-list {
+    margin-top: 2%;
+    display: inline-block;
+    width: 65%;
+}

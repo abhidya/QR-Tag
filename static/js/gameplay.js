@@ -166,7 +166,7 @@ $(function () {
 
     socket.on('game_reset', function (msg) {
         updateEvent("The game is restarting!");
-        game_start_time = new Date();
+        game_start_time = null;
         for (var i=0;i<msg.players.length;i++) {
             updatePlayer(msg.players[i]);
         }

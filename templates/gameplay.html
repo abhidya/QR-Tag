@@ -11,8 +11,8 @@
 </head>
 <body background=red>
 
-<audio autoplay >
-    <source loop id="music" src="/static/music/Menu.wav">
+<audio autoplay loop id="music">
+    <source  src="/static/music/other.mp3">
 </audio>
 
 
@@ -30,7 +30,7 @@
             <input type="number" id="code-prompt" placeholder="Game Code">
         </div>
         <div class="form-group">
-            <button type="button" id="submit-code" onsubmit=update_music()>Enter Game</button>
+            <button type="button" id="submit-code" onsubmit=update_music();>Enter Game</button>
             <button type="button" id="game-back-button">Back</button>
         </div>
     </form>
@@ -75,8 +75,7 @@
 
     }
         function update_music() {
-        document.getElementById("music").src = 'static/music/other.wav';
-
+        document.getElementById("music").src = '/static/music/other.mp3';
         }
 
 

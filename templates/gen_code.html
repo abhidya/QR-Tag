@@ -1,27 +1,94 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Generate Game Code</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-        <link rel="stylesheet" href="/static/css/gen_code.css">
-    </head>
-    <body>
-        <div class="container">
-            <h1 class="game-code-display">Generate Game Code</h1>
-            <h2 class="game-time-display"></h2>
-            <div class="main-button-row">
-                <button type="button" id="create-game" disabled>Create Game</button>
-                <button type="button" id="start-game" disabled>Start Game</button>
-                <button type="button" id="reset-game" disabled>Restart Game</button>
-                <button type="button" id="end-game" disabled>End Game</button>
-            </div>
-            <h3 class='player-header'>Players</h2>
-            <ol class="player-list"></ol>
-        </div>
-        <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6,fetch"></script>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.4.2.min.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
-        <script type="text/javascript" src="/static/js/gen_room.js" charset="utf-8"></script>
-    </body>
+<head>
+    <style>
+        .zap {
+            text-align: center;
+        }
+
+        .zap img {
+            /*width: 85%;*/
+            width: 100%;
+        }
+    </style>
+    <meta charset="utf-8">
+    <audio autoplay loop id="music">
+        <source src="/static/music/other.mp3">
+    </audio>
+    <title>Generate Game Code</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/gen_code.css">
+</head>
+<body>
+<div class="container">
+    <strong>
+    <div class="zap">
+
+        <img src="/static/images/game_code.png">
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <h2 class="game-time-display"></h2>
+    <h2 class="game-code-display"></h2>
+    <div class="main-button-row">
+        <button type="button" id="create-game" disabled>Create Game</button>
+        <button type="button" id="start-game" disabled>Start Game</button>
+        <button type="button" id="reset-game" disabled>Restart Game</button>
+        <button type="button" id="end-game" disabled>End Game</button>
+    </div>
+    <h3 class='player-header'>Players</h2>
+        <ol class="player-list"></ol>
+        </strong>
+</div>
+
+<script type="text/javascript">
+    function shuffle(array) {
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array[0];
+
+
+    }
+
+    function update_music() {
+        document.getElementById("music").src = '/static/music/other.mp3';
+    }
+
+
+    var colors = [' #2ECC40  ', ' #0074D9 ', ' #7FDBFF ', ' #39CCCC ', ' # #2ECC40', '#01FF70', ' #FFDC00 ', ' #FF851B', '#FF4136', '#DDDDDD', '#F012BE', '#B10DC9'];
+
+
+    function background_change(colors) {
+        document.body.style.backgroundColor = shuffle(colors);
+
+    }
+
+    document.body.style.backgroundColor = shuffle(colors);
+
+    if (!(/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent))) {
+        setInterval(background_change.bind(null, colors), 1900);
+
+    }
+</script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default,es6,fetch"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+<script type="text/javascript" src="/static/js/gen_room.js" charset="utf-8"></script>
+</body>
 </html>

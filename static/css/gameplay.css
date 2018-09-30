@@ -41,8 +41,18 @@
     display: flex;
     justify-content: center;
     width: 100%;
+
+    padding-top: 2%;
 }
 
 .info-box {
     flex-grow: 1;
+    border: 2px solid;
+    position: relative;
+}
+
+.event-feed {
+    position: absolute;
+     top: 50%; left: 50%;
+     transform: translate(-50%,-50%);
 }

@@ -1,0 +1,48 @@
+.pregame-form-wrapper {
+    position: relative;
+    display: flex;
+
+    width: 100%;
+    height: 100vh;
+}
+
+.pregame-form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pregame-form input {
+    padding: 2px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.game-screen-wrapper {
+    text-align: center;
+    position: absolute;
+
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.game-screen {
+    display: inline-block;
+}
+
+#camera-preview {
+    display: block;
+    margin: 0 auto;
+}
+
+.info-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.info-box {
+    flex-grow: 1;
+}

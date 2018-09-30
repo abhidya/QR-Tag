@@ -45,6 +45,11 @@ def debug_page():
     return render_template('debugging.html', async_mode=socketio.async_mode)
 
 
+@app.route('/gameplay')
+def gameplay_page():
+    return render_template('gameplay.html', async_mode=socketio.async_mode)
+
+
 @app.route('/new_game', methods=['POST'])
 def new_game():
     print("Creating new game...")

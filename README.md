@@ -1,4 +1,4 @@
-# CQL8RQRTAG
+# QRTAG
 
 ## Inspiration
 

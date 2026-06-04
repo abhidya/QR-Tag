@@ -4,7 +4,7 @@
 
 Not wanting to lose our childhood favorite games to the mobile era, we decided to re-imagine them in a way that incorporates modern technology and brings to the forefront how technology can improve our social lives.
 
-##What it does
+## What it does
 
 Our technology provides a platform for users to engage in social games while providing real time and honest score keeping.
 ## How we built it
@@ -57,3 +57,9 @@ pipenv run python server.py
 The server expects MongoDB at `mongodb://localhost:27017/cql8r` and uses local
 development secrets in source. Replace those with deployment-specific secrets
 before running on a public host.
+
+## Demo limitations
+
+- This is not a static-only browser game; gameplay depends on the Flask server, Socket.IO, and MongoDB.
+- The historical public domains above may be unavailable or stale.
+- QR/camera flows need browser camera permissions and may require HTTPS on mobile browsers outside local development.

@@ -3,6 +3,7 @@
 ## Inspiration
 
 Not wanting to lose our childhood favorite games to the mobile era, we decided to re-imagine them in a way that incorporates modern technology and brings to the forefront how technology can improve our social lives.
+
 ##What it does
 
 Our technology provides a platform for users to engage in social games while providing real time and honest score keeping.
@@ -42,3 +43,17 @@ Features such as GeoFencing. Which would be the ability to set a location and bo
 
     qrtag.faraway-vision.io
     qrtag.org 
+
+## Local run notes
+
+This is a legacy Flask-SocketIO/MongoDB game prototype. For local development,
+use the pinned Pipenv environment if possible:
+
+```sh
+pipenv install
+pipenv run python server.py
+```
+
+The server expects MongoDB at `mongodb://localhost:27017/cql8r` and uses local
+development secrets in source. Replace those with deployment-specific secrets
+before running on a public host.

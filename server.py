@@ -1,9 +1,15 @@
 #!/usr/bin/env python
+import os
 from threading import Lock
 from flask import Flask, render_template, session, request, jsonify, abort
-from flask_pymongo import PyMongo
-from flask_socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, rooms, disconnect
+try:
+    from flask_pymongo import PyMongo
+except ImportError:
+    PyMongo = None
+try:
+    from flask_socketio import SocketIO
+except ImportError:
+    SocketIO = None
 
 from game import Game
 from player import Player
@@ -14,16 +20,100 @@ from player import Player
 async_mode = None
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/cql8r'
-mongo = PyMongo(app)
-socketio = SocketIO(app, async_mode=async_mode)
+app.config['SECRET_KEY'] = os.environ.get("QRTAG_SECRET_KEY", "local-dev-secret")
+app.config['MONGO_URI'] = os.environ.get("QRTAG_MONGO_URI", "mongodb://localhost:27017/cql8r")
+
+
+class MemoryCollection:
+    def __init__(self):
+        self.documents = {}
+
+    def find_one(self, query):
+        for doc in self.documents.values():
+            if all(doc.get(key) == value for key, value in query.items()):
+                return dict(doc)
+        return None
+
+    def find_one_and_replace(self, query, replacement, upsert=False, return_document=None):
+        existing = self.find_one(query)
+        key = None
+        if existing is not None:
+            key = existing.get('game_id') or existing.get('player_id') or existing.get('_id')
+        elif upsert:
+            key = replacement.get('game_id') or replacement.get('player_id') or replacement.get('_id')
+        if key is None:
+            return None
+        self.documents[key] = dict(replacement)
+        return dict(self.documents[key])
+
+    def remove(self, query):
+        keys = []
+        for key, doc in self.documents.items():
+            if all(doc.get(query_key) == value for query_key, value in query.items()):
+                keys.append(key)
+        for key in keys:
+            self.documents.pop(key, None)
+        return {"removed": len(keys)}
+
+
+class MemoryDB:
+    def __init__(self):
+        self.games = MemoryCollection()
+        self.players = MemoryCollection()
+
+
+class MemoryMongo:
+    def __init__(self):
+        self.db = MemoryDB()
+
+
+class SocketFallback:
+    async_mode = "threading-fallback"
+
+    def on(self, *args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
+    def emit(self, *args, **kwargs):
+        return None
+
+    def sleep(self, seconds):
+        return None
+
+    def start_background_task(self, target, *args, **kwargs):
+        return target(*args, **kwargs)
+
+    def close_room(self, *args, **kwargs):
+        return None
+
+    def run(self, flask_app, **kwargs):
+        return flask_app.run(**kwargs)
+
+
+if PyMongo is not None and os.environ.get("QRTAG_USE_MONGO") == "1":
+    mongo = PyMongo(app)
+    mongo_mode = "mongo"
+else:
+    mongo = MemoryMongo()
+    mongo_mode = "memory"
+
+socketio = SocketIO(app, async_mode=async_mode) if SocketIO is not None else SocketFallback()
 thread = None
 thread_lock = Lock()
 
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
+
+
+@app.route('/health')
+def health():
+    return jsonify({
+        "ok": True,
+        "mongo": mongo_mode,
+        "socketio": socketio.async_mode,
+    })
 
 @app.route('/camera')
 def camera():

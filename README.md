@@ -58,6 +58,17 @@ The server expects MongoDB at `mongodb://localhost:27017/cql8r` and uses local
 development secrets in source. Replace those with deployment-specific secrets
 before running on a public host.
 
+For an offline HTTP demo, the server now falls back to an in-memory game store
+and a no-op Socket.IO adapter when Flask-SocketIO, Flask-PyMongo, or MongoDB are
+not available:
+
+```sh
+python smoke_test.py
+```
+
+`/health` reports the active storage/socket mode. Set `QRTAG_USE_MONGO=1` and
+`QRTAG_MONGO_URI` to use MongoDB.
+
 ## Demo limitations
 
 - This is not a static-only browser game; gameplay depends on the Flask server, Socket.IO, and MongoDB.

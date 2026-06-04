@@ -1,8 +1,16 @@
-from flask_socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, rooms, disconnect
+try:
+    from flask_socketio import join_room, leave_room
+except ImportError:
+    def join_room(*args, **kwargs):
+        return None
+
+    def leave_room(*args, **kwargs):
+        return None
 from random import randint
-from enum import Enum
-import pymongo
+try:
+    import pymongo
+except ImportError:
+    pymongo = None
 
 from player import Player
 
@@ -37,6 +45,9 @@ class Game:
         return (doc is not None)
 
     def save(self):
+        return_document = None
+        if pymongo is not None:
+            return_document = pymongo.collection.ReturnDocument.AFTER
         return self.db.games.find_one_and_replace(
             {'game_id': self.id},
             {
@@ -46,7 +57,7 @@ class Game:
                 'state': self.state
             },
             upsert=True,
-            return_document=pymongo.collection.ReturnDocument.AFTER
+            return_document=return_document
         )
 
     def emit(self, event, data, **kwargs):

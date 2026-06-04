@@ -1,5 +1,7 @@
-import pymongo
-from enum import Enum
+try:
+    import pymongo
+except ImportError:
+    pymongo = None
 
 class Player:
     def __init__(self, socketio, mongo, sid):
@@ -35,6 +37,9 @@ class Player:
         return doc is not None
 
     def save(self):
+        return_document = None
+        if pymongo is not None:
+            return_document = pymongo.collection.ReturnDocument.AFTER
         self.db.players.find_one_and_replace(
             {'player_id': self.id},
             {
@@ -48,7 +53,7 @@ class Player:
                 'index': self.index
             },
             upsert=True,
-            return_document=pymongo.collection.ReturnDocument.AFTER
+            return_document=return_document
         )
 
     def delete(self):
